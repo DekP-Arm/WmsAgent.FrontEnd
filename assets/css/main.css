@@ -1,4 +1,33 @@
 
+
+.background-animate {
+    background-size: 200%;
+    -webkit-animation: AnimateBackgroud 5s ease infinite;
+    -moz-animation: AnimateBackgroud 5s ease infinite;
+    animation: AnimateBackgroud 5s ease infinite;
+  }
+  
+  @keyframes AnimateBackgroud {
+    0% {
+      background-position: 0;
+    }
+    50% {
+      background-position: 100%;
+    }
+    100% {
+      background-position: 0;
+    }
+  }
+
+.area {
+	background: #4e54c8;
+	background: -webkit-linear-gradient(to left, #ffffff, #ffffff);
+	width: 100%;
+	height: 100vh;
+	position: absolute;
+	z-index: -1;
+}
+
 .circles {
 	top: 0;
 	left: 0;
