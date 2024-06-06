@@ -5,6 +5,7 @@ import { useState } from "react";
 
 export function Register() {
     const { isDarkMode } = useTheme();
+    const router = useRouter()
 
     return (
         <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
@@ -111,8 +112,9 @@ export function Register() {
                             </a>
                         </div>
                         <div className="text-center">
-                            <a className="inline-block text-sm text-blue-500 dark:text-blue-500 align-baseline hover:text-blue-800"
-                                href="./index.html">
+                            <a 
+                            onClick={() => router.push('/pages/login/')}  className="inline-block text-sm text-blue-500 dark:text-blue-500 align-baseline hover:text-blue-800"
+                                href="#">
                                 Already have an account? Login!
                             </a>
                         </div>

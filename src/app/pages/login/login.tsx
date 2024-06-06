@@ -1,44 +1,78 @@
 "use client";
 import { useTheme } from '~/app/_context/Theme';
+import { useSidebar } from '~/app/_context/Sidebar';
 import { useRouter } from "next/navigation";
+import { Register } from "~/app/pages/register/register";
 import { useState } from "react";
 import AppRouter from 'next/dist/client/components/app-router';
+// import "assets/css/sidebar.css";
 
 export function Login() {
     const { isDarkMode } = useTheme();
+    const { isOpen, toggleOpen } = useSidebar();
     const router = useRouter()
 
     console.log("Current theme:", isDarkMode ? "dark" : "light");
     return (
-        <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-            <div className="flex justify-center h-screen">
-                <div className="hidden bg-cover lg:block lg:w-2/3" >
-                    <div className="flex items-center h-full bg-gray-900 bg-opacity-40">
-                        <div className="flex w-full h-full flex-col justify-center px-10 py-16 lg:px- z-10 bg-gradient-to-r
+        <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'} `}>
+            <div className="flex justify-center h-screen ">
+                <div
+                    className={`${isDarkMode ? 'text-white' : 'text-gray-800 bg-white'} hidden bg-cover lg:block lg:w-2/3`}
+                >
+                    <div className="h-full">
+                        {isOpen ? (
+                            <div className="z-50 ">
+                                <Register />
+                                <div className="absolute top-1/2 right-1/3 z-50 hover:text-blue-500 duration-200">
+                                    <button onClick={toggleOpen} className={`${isDarkMode ? 'bg-white text-gray-800' : 'bg-gray-800 text-white opacity-70'} opacity-80 pl-2 py-3 pr-2 inline-flex rounded-l-2xl hover:pr-4 buttonClick duration-200`}>
+                                        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-full" >
+                                <div className="flex items-center h-full bg-gray-900 bg-opacity-40">
+                                    <div className="flex w-full h-full flex-col justify-center px-10 py-16 lg:px- z-10 bg-gradient-to-r
                             from-green-500
                             via-blue-500
                             to-purple-500
                             background-animate">
-                            <h2 className={`${isDarkMode ? 'text-gray-800' : 'text-white'} text-4xl font-bold lg:mt-60 lg:ml-10 `}>WMS Lite</h2>
+                                        <h2 className={`${isDarkMode ? 'text-gray-800' : 'text-white'} text-4xl font-bold lg:mt-60 lg:ml-10 `}>WMS Lite</h2>
 
-                            <p className="max-w-xl lg:ml-10 mt-3 text-gray-300">Lorem ipsum dolor sit, amet consectetur adipisicing elit. In autem ipsa, nulla laboriosam dolores, repellendus perferendis libero suscipit nam temporibus molestiae</p>
-                            <ul className="circles lg:w-1/3">
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                            </ul>
-                        </div>
+                                        <div className="max-w-xl lg:ml-10 mt-3 text-gray-300">Lorem ipsum dolor sit, amet consectetur adipisicing elit. In autem ipsa, nulla laboriosam dolores, repellendus perferendis libero suscipit nam temporibus molestiae</div>
+                                        <ul className="circles lg:w-1/3">
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                            <li></li>
+                                        </ul>
+                                        <div className="absolute top-1/2 right-1/3 hover:text-blue-500 duration-200">
+                                            <button onClick={toggleOpen} className={`${isDarkMode ? 'bg-gray-900' : 'bg-white opacity-70'} pl-2 py-3 inline-flex rounded-l-2xl hover:pl-4 buttonClick duration-200`}>
+                                                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                </svg>
+                                                <div className="ml-2 font-bold mt-0.5 text-xl mr-2 ">
+                                                    Sign Up
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
 
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
+
 
                 <div className="flex items-center w-full max-w-md px-6 mx-auto lg:w-2/6">
                     <div className="flex-1">
@@ -54,7 +88,7 @@ export function Login() {
                                 <div className={`${isDarkMode ? 'text-white' : 'text-gray-800'} text-4xl font-bold text-center`} >WMS Lite</div>
                             </div>
 
-                            <p className="mt-3 text-gray-500 dark:text-gray-300">Sign in to access your account</p>
+                            <div className="mt-3 text-gray-500 dark:text-gray-300">Sign in to access your account</div>
                         </div>
 
                         <div className="mt-8">
@@ -83,7 +117,14 @@ export function Login() {
                             </form>
 
 
-                            <p onClick={() => router.push('/app/pages/login/register')} className="mt-6 text-sm text-center text-gray-400">Don&#x27;t have an account yet? <a href="#" className="text-blue-500 focus:outline-none focus:underline hover:underline">Sign up</a>.</p>
+                            <p
+                                onClick={() => router.push('/pages/register/')}
+                                className="mt-6 text-sm text-center text-gray-400">
+                                Don&#x27;t have an account yet?
+                                <a href="#" className="text-blue-500 focus:outline-none focus:underline hover:underline">
+                                    Sign up
+                                </a>.
+                            </p>
                         </div>
                     </div>
                 </div>
