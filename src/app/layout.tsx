@@ -3,8 +3,11 @@ import "~/styles/globals.css";
 import { GeistSans } from "geist/font/sans";
 
 import { TRPCReactProvider } from "~/trpc/react";
-
+import { SidebarProvider } from '~/app/_context/Sidebar';
 import { ThemeProvider } from '~/app/_context/Theme';
+import { Navbar } from "~/app/_components/Navbar";
+import "assets/css/main.css";
+
 
 
 export const metadata = {
@@ -22,9 +25,12 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
         <TRPCReactProvider>
+          <SidebarProvider>
           <ThemeProvider>
+            <Navbar />
             {children}
           </ThemeProvider>
+          </SidebarProvider>
         </TRPCReactProvider>
       </body>
     </html>

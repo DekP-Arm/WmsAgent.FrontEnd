@@ -14,9 +14,30 @@
   }
   
   /* Add styling for the button to toggle the sidebar */
-  button {
+  .buttonClick {
     position: absolute;
-    top: 10px;
-    left: 0px;
+    /* top: 48%;
+    left: 58%; */
     z-index: 999;
   }
+
+  @-webkit-keyframes zoomIn {
+	0% {
+		opacity: 0;
+		-webkit-transform: scale3d(0.3, 0.3, 0.3);
+		transform: scale3d(0.3, 0.3, 0.3);
+	}
+	50% {
+		opacity: 1;
+	}
+}
+@keyframes zoomIn {
+	0% {
+		opacity: 0;
+		-webkit-transform: scale3d(0.3, 0.3, 0.3);
+		transform: scale3d(0.3, 0.3, 0.3);
+	}
+	50% {
+		opacity: 1;
+	}
+}
