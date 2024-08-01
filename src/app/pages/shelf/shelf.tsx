@@ -18,9 +18,15 @@ export default function DynamicGrid() {
   const [defaultCellHeight, setDefaultCellHeight] = useState<number>(100);
   const [cells, setCells] = useState<Cell[]>([]);
   const [selectedCells, setSelectedCells] = useState<Set<number>>(new Set());
+  const [shelfName, setShelfName] = useState<string>('');
+  const [selectedCellDetail, setSelectedCellDetail] = useState<Cell | null>(null);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+  };
+
+  const handleShelfNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setShelfName(e.target.value);
   };
 
   const handleWidthChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +69,7 @@ export default function DynamicGrid() {
       }
       return newSelectedCells;
     });
+    setSelectedCellDetail(cells.find(cell => cell.id === cellId) || null);
   };
 
   const mergeSelectedCells = () => {
@@ -123,9 +130,9 @@ export default function DynamicGrid() {
       <div className="mb-4">
         <input
           type="text"
-          onChange={handleInputChange}
+          onChange={handleShelfNameChange}
           className="border border-gray-300 p-2 rounded-md mr-2"
-          placeholder="Enter Name "
+          placeholder="Enter Shelf Name"
         />
         <input
           type="text"
@@ -141,6 +148,7 @@ export default function DynamicGrid() {
           Create Grid
         </button>
       </div>
+      {shelfName && <h2 className="text-xl mb-4">{shelfName}</h2>}
       <div className="mb-4">
         <input
           type="number"
@@ -185,6 +193,13 @@ export default function DynamicGrid() {
           )
         )}
       </div>
+      {selectedCellDetail && (
+        <div className="mt-4 p-4 border border-gray-300 rounded-md">
+          <p className="text-lg mb-1 font-bold">Block {selectedCellDetail.id+1}</p>
+          <p className="ml-2">Size : {selectedCellDetail.width} x {selectedCellDetail.height}</p>
+          <p className="ml-2">Items : </p>
+        </div>
+      )}
     </div>
   );
 }
