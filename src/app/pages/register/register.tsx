@@ -8,7 +8,7 @@ export function Register() {
     const router = useRouter()
 
     return (
-        <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'} buttonClick duration-500`}>
             <div className="flex justify-center h-screen">
                 <div className="hidden bg-cover lg:block lg:w-1/3" >
                     <div className="flex items-center h-full bg-gray-900 bg-opacity-40">
@@ -17,9 +17,9 @@ export function Register() {
         via-blue-500
         to-purple-500
         background-animate">
-                            <h2 className={`${isDarkMode ? 'text-gray-800' : 'text-white'} text-4xl font-bold `}>WMS Lite</h2>
+                            <h2 className={`${isDarkMode ? 'text-gray-800' : 'text-white'}  text-4xl font-bold `}>Agent</h2>
 
-                            <p className="max-w-xl mt-3 text-gray-300">Lorem ipsum dolor sit, amet consectetur adipisicing elit. In autem ipsa, nulla laboriosam dolores, repellendus perferendis libero suscipit nam temporibus molestiae</p>
+                            <p className="max-w-xl mt-3 text-gray-300">Warehouse Web App</p>
                         </div>
                         
                     </div>
