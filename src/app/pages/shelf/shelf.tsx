@@ -126,7 +126,7 @@ export default function DynamicGrid() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 ">
       <div className="mb-4">
         <input
           type="text"
