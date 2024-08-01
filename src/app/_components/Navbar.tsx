@@ -43,6 +43,14 @@ export function Navbar() {
           </button>
         </Link>
       </div>
+
+      <div className="ml-auto">
+        <Link href="/pages/Inbound">
+          <button className="bg-gray-800 p-1 text-white px-2 rounded-lg">
+            Inbound
+          </button>
+        </Link>
+      </div>
     </nav>
     );
 }
