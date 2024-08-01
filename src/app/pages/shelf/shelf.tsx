@@ -123,6 +123,12 @@ export default function DynamicGrid() {
       <div className="mb-4">
         <input
           type="text"
+          onChange={handleInputChange}
+          className="border border-gray-300 p-2 rounded-md mr-2"
+          placeholder="Enter Name "
+        />
+        <input
+          type="text"
           value={inputValue}
           onChange={handleInputChange}
           className="border border-gray-300 p-2 rounded-md mr-2"
