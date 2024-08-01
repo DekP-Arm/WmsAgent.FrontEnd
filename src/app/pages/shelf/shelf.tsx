@@ -1,5 +1,7 @@
-"use client";
-import React, { useState, ChangeEvent } from 'react';
+'use client';
+
+import React, { useState, useContext, ChangeEvent } from 'react';
+import { ShelfContext } from '~/app/_context/ShelfContext'; // Adjust path as necessary
 
 type Cell = {
   id: number;
@@ -11,6 +13,14 @@ type Cell = {
 };
 
 export default function DynamicGrid() {
+  const shelfContext = useContext(ShelfContext);
+
+  if (!shelfContext) {
+    throw new Error('ShelfContext must be used within a ShelfProvider');
+  }
+
+  const { addShelf } = shelfContext;
+
   const [rows, setRows] = useState<number>(0);
   const [cols, setCols] = useState<number>(0);
   const [inputValue, setInputValue] = useState<string>('');
@@ -57,6 +67,15 @@ export default function DynamicGrid() {
     }
     setCells(newCells);
     setSelectedCells(new Set());
+
+    // Save shelf data to local storage
+    const shelf: Shelf = {
+      name: shelfName,
+      rows: inputRows,
+      cols: inputCols,
+      cells: newCells,
+    };
+    localStorage.setItem('currentShelf', JSON.stringify(shelf));
   };
 
   const toggleCellSelection = (cellId: number) => {
@@ -148,7 +167,6 @@ export default function DynamicGrid() {
           Create Grid
         </button>
       </div>
-      {shelfName && <h2 className="text-xl mb-4">{shelfName}</h2>}
       <div className="mb-4">
         <input
           type="number"
@@ -171,35 +189,43 @@ export default function DynamicGrid() {
       >
         Merge Selected Cells
       </button>
-      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, ${defaultCellWidth}px)` }}>
-        {cells.map((cell) =>
-          cell.merged && (cell.colspan === 0 || cell.rowspan === 0) ? null : (
-            <div
-              key={cell.id}
-              onClick={() => toggleCellSelection(cell.id)}
-              className={`border border-gray-300 ${selectedCells.has(cell.id) ? 'bg-blue-200' : ''}`}
-              style={{
-                width: `${cell.width}px`,
-                height: `${cell.height}px`,
-                gridColumn: `span ${cell.colspan}`,
-                gridRow: `span ${cell.rowspan}`,
-              }}
-            >
-              Block {cell.id + 1}
-              <div className="text-xs text-gray-400">
-                {cell.width} x {cell.height}
+
+      <div className="flex">
+      <div className="overflow-x-auto flex-1">
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, ${defaultCellWidth}px)` }}>
+          {cells.map((cell) =>
+            cell.merged && (cell.colspan === 0 || cell.rowspan === 0) ? null : (
+              <div
+                key={cell.id}
+                onClick={() => toggleCellSelection(cell.id)}
+                className={`border border-gray-300 ${selectedCells.has(cell.id) ? 'bg-blue-200' : ''}`}
+                style={{
+                  width: `${cell.width}px`,
+                  height: `${cell.height}px`,
+                  gridColumn: `span ${cell.colspan}`,
+                  gridRow: `span ${cell.rowspan}`,
+                }}
+              >
+                Block {cell.id + 1}
+                <div className="text-xs text-gray-400">
+                  {cell.width} x {cell.height}
+                </div>
               </div>
-            </div>
-          )
+            )
+          )}
+        </div>
+      </div>
+      <div className="w-1/4 p-4 border-l border-gray-300">
+        {selectedCellDetail && (
+          <div>
+            <h2 className="text-xl font-bold mb-1">Shelf {shelfName}</h2>
+            <p className="text-md text-gray-500 ml-2 font-bold">Block {selectedCellDetail.id + 1}</p>
+            <p className="ml-2">Size: {selectedCellDetail.width} x {selectedCellDetail.height}</p>
+            <p className="ml-2">Items: </p>
+          </div>
         )}
       </div>
-      {selectedCellDetail && (
-        <div className="mt-4 p-4 border border-gray-300 rounded-md">
-          <p className="text-lg mb-1 font-bold">Block {selectedCellDetail.id+1}</p>
-          <p className="ml-2">Size : {selectedCellDetail.width} x {selectedCellDetail.height}</p>
-          <p className="ml-2">Items : </p>
-        </div>
-      )}
+    </div>
     </div>
   );
 }

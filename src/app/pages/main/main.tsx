@@ -2,6 +2,7 @@
 import { useTheme } from '~/app/_context/Theme';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from 'next/link';
 
 export function Main() {
     const [isVisibleA, setIsVisibleA] = useState(true);
@@ -64,9 +65,11 @@ export function Main() {
                 </div>
             </div>
             <div className=" border border-red-500">
+                
                 <div className={` ${isVisibleA ? 'block' : 'hidden'}`}>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                            <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -76,10 +79,12 @@ export function Main() {
                                 </div>
                             </div>
                             shelf aa
+                            </Link>
                         </div>
                     </div>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -89,10 +94,12 @@ export function Main() {
                                 </div>
                             </div>
                             shelf ab
+                            </Link>
                         </div>
                     </div>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -102,10 +109,12 @@ export function Main() {
                                 </div>
                             </div>
                             shelf ac
+                            </Link>
                         </div>
                     </div>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -115,12 +124,16 @@ export function Main() {
                                 </div>
                             </div>
                             shelf ad
+                            </Link>
                         </div>
                     </div>
                 </div>
+                
+                
                 <div className={` ${isVisibleB ? 'block' : 'hidden'}`}>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -130,10 +143,12 @@ export function Main() {
                                 </div>
                             </div>
                             shelf ba
+                            </Link>
                         </div>
                     </div>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -143,10 +158,12 @@ export function Main() {
                                 </div>
                             </div>
                             shelf bb
+                            </Link>
                         </div>
                     </div>
                     <div className="flex">
                         <div className="mt-8 mx-auto">
+                        <Link href="/pages/shelf-show">
                             <div className="flex justify">
                                 <div className='bg-gray-400 text-white px-4 py-1'>
                                     2
@@ -156,14 +173,16 @@ export function Main() {
                                 </div>
                             </div>
                             shelf bc
+                            </Link>
                         </div>
                     </div>
                     
                 </div>
+                
             </div>
             <div className="flex border border-red-500">
                 <div className="mt-10 mx-auto">
-                    hi
+                    เว้นไว้ทำไมไม่รู้ งงเหมือนกัน
                 </div>
             </div>
         </div >

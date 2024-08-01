@@ -6,6 +6,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { SidebarProvider } from '~/app/_context/Sidebar';
 import { ThemeProvider } from '~/app/_context/Theme';
 import { Navbar } from "~/app/_components/Navbar";
+import { ShelfProvider } from "~/app/_context/ShelfContext";
 import "assets/css/main.css";
 
 
@@ -27,8 +28,10 @@ export default function RootLayout({
         <TRPCReactProvider>
           <SidebarProvider>
           <ThemeProvider>
+          <ShelfProvider>
             <Navbar />
             {children}
+            </ShelfProvider>
           </ThemeProvider>
           </SidebarProvider>
         </TRPCReactProvider>
