@@ -59,6 +59,13 @@ export function Navbar() {
           </button>
         </Link>
       </div>
+      <div className="ml-auto">
+        <Link href="/pages/Officer">
+          <button className="bg-gray-800 p-1 text-white px-2 rounded-lg">
+            Officer
+          </button>
+        </Link>
+      </div>
     </nav>
     );
 }
