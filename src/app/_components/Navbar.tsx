@@ -12,9 +12,9 @@ export function Navbar() {
     };
 
     return (
-        <nav className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'} p-2 flex sticky top-0 z-50 buttonClick duration-500 flex items-center`}>
+        <nav className={`${isDarkMode ? 'bg-zinc-800' : 'bg-gray-200'} p-2 flex sticky top-0 z-50 buttonClick duration-500 items-center`}>
       <button onClick={toggleTheme} className="">
-        <svg className={`${isDarkMode ? 'text-gray-200' : 'text-gray-800'} hover:scale-125 duration-200 h-7 w-7 ml-2`} width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg className={`${isDarkMode ? 'text-gray-200' : 'text-black'} hover:scale-125 duration-200 h-7 w-7 ml-2`} width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path stroke="none" d="M0 0h24v24H0z" />
           <circle cx="12" cy="12" r="3" />
           <line x1="12" y1="5" x2="12" y2="3" />
@@ -30,7 +30,7 @@ export function Navbar() {
 
       <div className="">
         <Link href="/pages/main">
-          <button className="text-gray-800 text-lg px-1 font-bold rounded-lg">
+          <button className={`${isDarkMode ? 'text-white' : 'text-black'} text-lg px-1 font-bold rounded-lg`}>
             WMS
           </button>
         </Link>
@@ -38,15 +38,23 @@ export function Navbar() {
 
       <div className="ml-auto">
         <Link href="/pages/shelf">
-          <button className="bg-gray-800 p-1 text-white px-2 rounded-lg">
+          <button className="bg-black p-1 text-white px-2 rounded-lg">
             Create Shelf
           </button>
         </Link>
       </div>
 
-      <div className="ml-auto">
+      <div className="ml-2">
+        <Link href="/pages/main">
+          <button className="bg-black p-1 text-white px-2 rounded-lg">
+            Shelf
+          </button>
+        </Link>
+      </div>
+
+      <div className="ml-2">
         <Link href="/pages/Inbound">
-          <button className="bg-gray-800 p-1 text-white px-2 rounded-lg">
+          <button className="bg-black p-1 text-white px-2 rounded-lg">
             Inbound
           </button>
         </Link>
