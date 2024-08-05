@@ -51,7 +51,7 @@ export default function ShelfPage() {
 
   return (
     <div className="flex">
-      <div className="overflow-x-auto flex-1">
+      <div className="overflow-x-auto flex-1 p-4">
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${shelf.cols}, ${100}px)` }}>
           {shelf.cells.map((cell) =>
             cell.merged && (cell.colspan === 0 || cell.rowspan === 0) ? null : (
