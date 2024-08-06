@@ -93,27 +93,38 @@ export default function DynamicGrid() {
 
   const mergeSelectedCells = () => {
     if (selectedCells.size < 2) return;
-
+  
+    // Get the list of selected cells and sort them
     const sortedSelectedCells = Array.from(selectedCells).sort((a, b) => a - b);
+  
+    // Extract the starting and ending cells
     const startCellId = sortedSelectedCells[0];
     const endCellId = sortedSelectedCells[sortedSelectedCells.length - 1];
-
+  
+    // Get the row and column for the start and end cells
     const startRow = Math.floor(startCellId / cols);
-    const startCol = startCellId % cols;
     const endRow = Math.floor(endCellId / cols);
+  
+    // Check if all selected cells are in the same row
+    const areAllCellsInSameRow = Array.from(selectedCells).every(cellId => Math.floor(cellId / cols) === startRow);
+    if (!areAllCellsInSameRow) {
+      alert("Cannot merge block from different rows.");
+      return;
+    }
+  
+    const startCol = startCellId % cols;
     const endCol = endCellId % cols;
-
+  
     let newWidth = 0;
     let newHeight = 0;
-
-    for (let i = startRow; i <= endRow; i++) {
-      newHeight += defaultCellHeight;
-    }
-
+  
+    // Calculate new width and height based on selected cells
     for (let j = startCol; j <= endCol; j++) {
       newWidth += defaultCellWidth;
     }
-
+    newHeight = defaultCellHeight; // Height remains constant as cells are in the same row
+  
+    // Update cells array
     const newCells = cells.map((cell) => {
       if (selectedCells.has(cell.id)) {
         if (cell.id === startCellId) {
@@ -121,7 +132,7 @@ export default function DynamicGrid() {
             ...cell,
             merged: true,
             colspan: endCol - startCol + 1,
-            rowspan: endRow - startRow + 1,
+            rowspan: 1,
             width: newWidth,
             height: newHeight,
           };
@@ -131,7 +142,7 @@ export default function DynamicGrid() {
       }
       return cell;
     });
-
+  
     // Recalculate IDs
     const recalculatedCells = newCells
       .filter(cell => !(cell.merged && (cell.colspan === 0 || cell.rowspan === 0)))
@@ -139,10 +150,12 @@ export default function DynamicGrid() {
         ...cell,
         id: index,
       }));
-
+  
     setCells(recalculatedCells);
     setSelectedCells(new Set());
   };
+  
+  
 
   return (
     <div className="p-4 ">
@@ -190,6 +203,9 @@ export default function DynamicGrid() {
         Merge Selected Cells
       </button>
 
+      <div className="mb-4 mt-4 text-2xl">
+        Shelf {shelfName}
+      </div>
       <div className="flex">
       <div className="overflow-x-auto flex-1">
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, ${defaultCellWidth}px)` }}>
