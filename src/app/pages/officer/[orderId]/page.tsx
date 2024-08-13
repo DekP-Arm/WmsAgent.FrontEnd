@@ -40,8 +40,8 @@ const OrderDetail = ({ params }: { params: { orderId: string } }) => {
         <h1 className="text-3xl font-bold text-white mb-4">
           Order Details for {order.id}
         </h1>
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-neutral-800">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 rounded-lg overflow-hidden bg-gray-800">
+          <thead className="bg-gray-900 text-white">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-50 uppercase tracking-wider">
                 Item
@@ -52,11 +52,11 @@ const OrderDetail = ({ params }: { params: { orderId: string } }) => {
 
             </tr>
           </thead>
-          <tbody className="bg-neutral-700 divide-y divide-gray-600">
+          <tbody className="bg-gray-800 divide-y divide-gray-700 text-white">
             {order.items.map((item, index) => (
               <tr key={index}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-50">{item.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-50">{item.quantity}</td>              </tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{item.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{item.quantity}</td>              </tr>
             ))}
           </tbody>
         </table>
