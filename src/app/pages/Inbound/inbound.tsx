@@ -7,16 +7,19 @@ import React, {
   FormEvent,
 } from "react";
 import { FiPlus, FiTrash } from "react-icons/fi";
+import { useTheme } from '~/app/_context/Theme';
 import { motion } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 
 export function Inbound() {
+  const { isDarkMode } = useTheme();
   return (
-    <div className="h-screen w-full bg-neutral-900 text-neutral-50">
+    <div className={`${isDarkMode ? 'bg-neutral-900 text-neutral-50' : 'bg-white text-black'} duration-300 h-screen w-full`}>
       <Board />
     </div>
   );
 }
+
 
 const Board = () => {
   const [cards, setCards] = useState<CardType[]>(DEFAULT_CARDS);
@@ -43,7 +46,7 @@ const Board = () => {
       <Column
         title="Checking"
         column="Checking"
-        headingColor="text-yellow-200"
+        headingColor="text-yellow-400"
         cards={cards}
         setCards={setCards}
         onCardClick={handleCardClick}
@@ -51,7 +54,7 @@ const Board = () => {
       <Column
         title="Reject"
         column="Reject"
-        headingColor="text-red-200"
+        headingColor="text-red-400"
         cards={cards}
         setCards={setCards}
         onCardClick={handleCardClick}
@@ -59,7 +62,7 @@ const Board = () => {
       <Column
         title="Approve"
         column="Approve"
-        headingColor="text-emerald-200"
+        headingColor="text-emerald-400"
         cards={cards}
         setCards={setCards}
         onCardClick={handleCardClick}
