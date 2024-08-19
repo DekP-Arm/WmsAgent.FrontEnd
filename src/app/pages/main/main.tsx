@@ -185,6 +185,7 @@ export function Main() {
     const renderShelf = (shelfName, items, refMap) => (
         <div className="flex flex-col items-center mb-8" ref={el => refMap.current[shelfName] = el}>
             <div className="w-full h-full max-w-xs" style={{ height: '200px' }}>
+                <Link href="/pages/shelf-list">
                 <div className="grid grid-cols-2 grid-rows-4 gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2">
                     {items.map(item => (
                         <div 
@@ -201,6 +202,7 @@ export function Main() {
                         </div>
                     ))}
                 </div>
+                </Link>
             </div>
             <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2 text-center`}>
                 {shelfName}
@@ -211,17 +213,18 @@ export function Main() {
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} relative`}>
             <svg className="absolute top-0 left-0 w-full h-full z-10" style={{ pointerEvents: 'none' }}></svg>
-            <div className="relative flex mt-6">
-                <div className='w-2/3'>
+            <div className="relative flex ">
+                <div className='w-2/3 mt-6'>
                     <h1 className="text-center text-2xl font-bold mb-6">Shelves</h1>
                     <div className="grid grid-cols-4 justify-center gap-6">
                         {Object.keys(shelves).map(shelfName => renderShelf(shelfName, shelves[shelfName], shelfRefs))}
                     </div>
                 </div>
-                <div className="w-1/3">
+                <div className="w-1/3 mt-6">
                     <h1 className="text-center text-2xl font-bold mb-6">Orders</h1>
                     <div className="flex flex-wrap justify-center gap-6">
                         {Object.keys(orders).map(orderName => (
+                            <Link href="/pages/shelf-list">
                             <div 
                                 key={orderName} 
                                 className="flex flex-col items-center mb-8" 
@@ -249,6 +252,7 @@ export function Main() {
                                     {orderName}
                                 </div>
                             </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
