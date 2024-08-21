@@ -1,6 +1,6 @@
 "use client";
 import { Login } from "~/app/pages/login/login";
-import Main from "./main";
+import Main from  "~/app/pages/Main/Main";
 import { Navbar } from "~/app/_components/Navbar";
 import "assets/css/main.css";
 
