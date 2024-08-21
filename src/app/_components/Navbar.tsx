@@ -29,23 +29,15 @@ export function Navbar() {
       </button>
 
       <div className="">
-        <Link href="/pages/main">
+        <Link href="/pages/Warehouse">
           <button className={`${isDarkMode ? 'text-white' : 'text-black'} text-lg px-1 font-bold rounded-lg`}>
             WMS
           </button>
         </Link>
       </div>
 
-      <div className="ml-auto">
-        <Link href="/pages/shelf">
-          <button className="bg-black p-1 text-white px-2 rounded-lg">
-            Create Shelf
-          </button>
-        </Link>
-      </div>
-
       <div className="ml-2">
-        <Link href="/pages/main">
+        <Link href="/pages/Shelf">
           <button className="bg-black p-1 text-white px-2 rounded-lg">
             Shelf
           </button>
