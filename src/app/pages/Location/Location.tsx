@@ -2,19 +2,24 @@
 import { useTheme } from '~/app/_context/Theme';
 import { useState, useRef } from "react";
 import Link from 'next/link';
-import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'; // Import icons
+import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useParams, useRouter } from 'next/navigation';
 
 export function Location() {
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const router = useRouter();
+    const params = new URLSearchParams(window.location.search);
+    const warehouseId = params.get('warehouseId');
+    const locationId = params.get('id');
 
     const [shelves, setShelves] = useState({
-        ZoneA: [{ id: 1, name: 'Shelf AA' }, { id: 2, name: 'Shelf AB' }],
-        ZoneB: [{ id: 1, name: 'Shelf BA' }, { id: 2, name: 'Shelf BB' }]
+        GroupShelfA: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }],
+        GroupShelfB: [{ id: 3, name: 'Shelf 3' }, { id: 4, name: 'Shelf 4' }]
     });
     const [reserves, setReserves] = useState({
-        DockA: [{ id: 1, name: 'Group AA' }, { id: 2, name: 'Palette 2' }],
-        DockB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
+        GroupAA: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
+        GroupAB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
     });
 
     const [selectedItem, setSelectedItem] = useState(null);
@@ -54,7 +59,8 @@ export function Location() {
         }
     };
 
-    const generateNextGroupName = (existingGroups) => {
+    const generateNextGroupName = (isShelf) => {
+        const existingGroups = Object.keys(isShelf ? shelves : reserves);
         const lastGroup = existingGroups[existingGroups.length - 1];
         const groupPrefix = lastGroup.slice(0, -1);
         const lastChar = lastGroup.slice(-1);
@@ -62,27 +68,25 @@ export function Location() {
 
         if (nextChar === 'A' && lastChar === 'Z') {
             const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.slice(-1)) + 1];
-            return `${groupPrefix.slice(0, -1)}${nextPrefix}A`;
+            return `Group${nextPrefix}A`;
         } else {
             return `${groupPrefix}${nextChar}`;
         }
     };
 
-    const addGroup = () => {
-        // Generate the next zone name
-        const newZoneName = generateNextGroupName(Object.keys(shelves));
-        const newDocumentName = newZoneName.replace('Zone', 'Dock');
-
-        // Add new zone and corresponding document
-        setShelves(prevShelves => ({
-            ...prevShelves,
-            [newZoneName]: [{ id: 1, name: 'Shelf 1' }]
-        }));
-
-        setReserves(prevReserves => ({
-            ...prevReserves,
-            [newDocumentName]: [{ id: 1, name: 'Palette 1' }]
-        }));
+    const addGroup = (isShelf) => {
+        const newGroupName = generateNextGroupName(isShelf);
+        if (isShelf) {
+            setShelves(prevShelves => ({
+                ...prevShelves,
+                [newGroupName]: [{ id: 1, name: 'Shelf 1' }]
+            }));
+        } else {
+            setReserves(prevReserves => ({
+                ...prevReserves,
+                [newGroupName]: [{ id: 1, name: 'Palette 1' }]
+            }));
+        }
     };
 
     const getGridClasses = (rows, cols) => {
@@ -91,71 +95,74 @@ export function Location() {
         return `${colClass} ${rowClass}`;
     };
 
+    const getGridClass = (rows, cols) => {
+        let colClass;
+            colClass = `grid-cols-3`;
+        const rowClass = rows <= 4 ? `grid-rows-${rows}` : `grid-rows-4`;
+        return `${colClass} ${rowClass}`;
+    };
+
     const renderGroup = (groupName, items, refMap, isShelf) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         return (
-            <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => refMap.current[groupName] = el}>
-                <div className='flex'>
-                    <div className={`${isDarkMode ? 'text-white' : 'text-black'} mr-1 text-white text-center`}>
-                        {groupName}
-                    </div>
-                    <button
-                        onClick={() => addItem(groupName, isShelf)}
-                        className={`p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
-                    >
-                        <PlusIcon className="w-5 h-5" />
-                    </button>
-                </div>
-                {/* Link updated to point to '/pages/Shelf' */}
-                <Link href={`/pages/Shelf`}>
-                    <div className="w-full h-full mt-2">
-                        <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
-                            {items.map(item => (
+            <div className="flex flex-col items-center mb-8" ref={el => refMap.current[groupName] = el} key={groupName}>
+                <div className="w-full h-full bg-zinc-800">
+                    <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
+                        {items.map(item => (
+                            <Link key={item.id} href={`/pages/Shelf?id=${item.id}`}>
                                 <div
-                                    key={item.id} // Add a key prop for unique identification
-                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-800'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
+                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id ? 'bg-green-500' : ''}`}
                                     onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
                                 >
                                     {item.name}
                                 </div>
-                            ))}
-                            {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
-                                <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
-                                    {/* Empty slot */}
-                                </div>
-                            ))}
-                        </div>
+                            </Link>
+                        ))}
+                        {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
+                            <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
+                                {/* Empty slot */}
+                            </div>
+                        ))}
                     </div>
-                </Link>
-            </div>
-        );
-    };
-
-    const renderReservesGroup = () => {
-        return (
-            <div className="mt-2 grid ">
-                <div className={`grid grid-cols-1 gap-4`}>
-                    {Object.keys(reserves).map(reserveName =>
-                        renderGroup(reserveName, reserves[reserveName], reserveRefs, false)
-                    )}
+                </div>
+                <div className='flex'>
+                    <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2.5 mr-1 text-center`}>
+                        {groupName}
+                    </div>
+                    <button
+                        onClick={() => addItem(groupName, isShelf)}
+                        className={`mt-2 p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
+                    >
+                        <PlusIcon className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
         );
     };
+
+    const renderReservesGroup = () => (
+        <div className="mt-2 grid">
+            <div className={`grid grid-cols-1 gap-4`}>
+                {Object.keys(reserves).map(reserveName =>
+                    renderGroup(reserveName, reserves[reserveName], reserveRefs, false)
+                )}
+            </div>
+        </div>
+    );
 
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
             <div className='w-2/3'>
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
-                        <Link href="/pages/Warehouse">
-                            <button
+                        
+                            <button onClick={() => router.push(`/pages/Warehouse?id=${warehouseId}`)}
                                 className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
                             >
                                 <ArrowLeftIcon className="w-6 h-6" />
                             </button>
-                        </Link>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Location</h1>
+                        
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Location Zone {locationId}</h1>
                         <div className='flex items-center'>
                             <input
                                 type="number"
@@ -168,14 +175,13 @@ export function Location() {
                             <input
                                 type="number"
                                 value={shelfGridConfig.cols}
-                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, cols: Math.min(6, parseInt(e.target.value)) })}
+                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, cols: parseInt(e.target.value) })}
                                 placeholder="Cols"
                                 className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
                                 min={1}
-                                max={6}
                             />
                             <button
-                                onClick={addGroup}
+                                onClick={() => addGroup(true)}
                                 className={`p-2 ${isDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white rounded-full flex items-center justify-center`}
                             >
                                 <PlusCircleIcon className="w-6 h-6" />
@@ -183,7 +189,7 @@ export function Location() {
                         </div>
                     </div>
                     <div className="mt-2">
-                        <div className={`grid grid-cols-1 gap-4`}>
+                        <div className={`grid ${getGridClass(shelfGridConfig.rows, shelfGridConfig.cols)} gap-4`}>
                             {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true))}
                         </div>
                     </div>
@@ -194,24 +200,32 @@ export function Location() {
                 <div className='items-center relative flex flex-col'>
                     <div className='flex items-center justify-between w-full mt-6 mb-2'>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Dock</h1>
-                        <input
-                            type="number"
-                            value={reserveGridConfig.rows}
-                            onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value) })}
-                            placeholder="Rows"
-                            className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                            min={1}
-                        />
-                        <input
-                            type="number"
-                            value={reserveGridConfig.cols}
-                            onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value) })}
-                            placeholder="Cols"
-                            className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                            min={1}
-                        />
+                        <div className='flex items-center'>
+                            <input
+                                type="number"
+                                value={reserveGridConfig.rows}
+                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value) })}
+                                placeholder="Rows"
+                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
+                                min={1}
+                            />
+                            <input
+                                type="number"
+                                value={reserveGridConfig.cols}
+                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value) })}
+                                placeholder="Cols"
+                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
+                                min={1}
+                            />
+                        </div>
+                        <button
+                            onClick={() => addGroup(false)}
+                            className={`p-2 ${isDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white rounded-full mr-8 flex items-center justify-center`}
+                        >
+                            <PlusCircleIcon className="w-6 h-6" />
+                        </button>
                     </div>
-                    <div className='mt-3.5'>
+                    <div className='mt-2'>
                         {renderReservesGroup()}
                     </div>
                 </div>

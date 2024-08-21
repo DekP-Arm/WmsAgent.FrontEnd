@@ -1,246 +1,315 @@
-"use client";
-import { useTheme } from '~/app/_context/Theme';
-import { useState, useRef } from "react";
-import Link from 'next/link';
-import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'; // Import icons
+'use client';
 
-export function Shelf() {
-    const { isDarkMode } = useTheme();
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+import React, { useState } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
-    const [shelves, setShelves] = useState({
-        ShelfAA: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }],
-        ShelfAB: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }]
-    });
-    const [reserves, setReserves] = useState({
-        GroupAA: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
-        GroupAB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
-    });
+type Cell = {
+  id: number;
+  merged: boolean;
+  colspan: number;
+  rowspan: number;
+  width: number;
+  height: number;
+  volume: number;
+};
 
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
-    const [reserveGridConfig, setReserveGridConfig] = useState({ rows: 4, cols: 2 });
-    const shelfRefs = useRef({});
-    const reserveRefs = useRef({});
+const ItemTypes = {
+  CELL: 'cell',
+};
 
-    const handleItemClick = (item, groupName, isShelf) => {
-        setSelectedItem({ ...item, group: groupName, isShelf });
-    };
+const DraggableCell = ({
+  cell,
+  index,
+  moveCell,
+  onSelectCell,
+  isSelected,
+  barData
+}: {
+  cell: Cell;
+  index: number;
+  moveCell: (dragIndex: number, hoverIndex: number) => void;
+  onSelectCell: (cellId: number) => void;
+  isSelected: boolean;
+  barData: { label: string; weight: number; percentage: number; color: string }[];
+}) => {
+  const [, ref] = useDrag({
+    type: ItemTypes.CELL,
+    item: { index },
+  });
 
-    const addItem = (groupName, isShelf) => {
-        const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
-        if (isShelf) {
-            setShelves(prevShelves => {
-                const newShelves = [...prevShelves[groupName]];
-                const maxItems = gridConfig.rows * gridConfig.cols;
-                if (newShelves.length < maxItems) {
-                    const newId = newShelves.length + 1;
-                    const newShelf = { id: newId, name: `Shelf ${newId}` };
-                    newShelves.push(newShelf);
-                }
-                return { ...prevShelves, [groupName]: newShelves };
-            });
-        } else {
-            setReserves(prevReserves => {
-                const newReserves = [...prevReserves[groupName]];
-                const maxItems = gridConfig.rows * gridConfig.cols;
-                if (newReserves.length < maxItems) {
-                    const newId = newReserves.length + 1;
-                    const newReserve = { id: newId, name: `Palette ${newId}` };
-                    newReserves.push(newReserve);
-                }
-                return { ...prevReserves, [groupName]: newReserves };
-            });
-        }
-    };
+  const [, drop] = useDrop({
+    accept: ItemTypes.CELL,
+    hover(item: { index: number }) {
+      if (item.index !== index) {
+        moveCell(item.index, index);
+        item.index = index;
+      }
+    },
+  });
 
-    const generateNextGroupName = (isShelf) => {
-        const existingGroups = Object.keys(isShelf ? shelves : reserves);
-        const lastGroup = existingGroups[existingGroups.length - 1];
-        const groupPrefix = lastGroup.slice(0, -1);
-        const lastChar = lastGroup.slice(-1);
-        const nextChar = alphabet[(alphabet.indexOf(lastChar) + 1) % alphabet.length];
+  const totalPercentage = barData.reduce((sum, bar) => sum + bar.percentage, 0);
 
-        if (nextChar === 'A' && lastChar === 'Z') {
-            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.slice(-1)) + 1];
-            return `Group${nextPrefix}A`;
-        } else {
-            return `${groupPrefix}${nextChar}`;
-        }
-    };
-
-    const addGroup = (isShelf) => {
-        const newGroupName = generateNextGroupName(isShelf);
-        if (isShelf) {
-            setShelves(prevShelves => ({
-                ...prevShelves,
-                [newGroupName]: [{ id: 1, name: 'Shelf 1' }]
-            }));
-        } else {
-            setReserves(prevReserves => ({
-                ...prevReserves,
-                [newGroupName]: [{ id: 1, name: 'Palette 1' }]
-            }));
-        }
-    };
-
-    const getGridClasses = (rows, cols) => {
-        const colClass = cols == 3 ? `grid-cols-${cols}` : 'grid-cols-4';
-        const rowClass = rows <= 4 ? `grid-rows-${rows}` : 'grid-rows-4';
-        return `${colClass} ${rowClass}`;
-    };
-
-    const getGridClass = (rows, cols) => {
-        // Determine column class based on the number of columns
-        let colClass;
-        if (cols <= 2) {
-            colClass = `grid-cols-5`;
-        } else if (cols <= 4) {
-            colClass = `grid-cols-3`;
-        } else if (cols <= 6) {
-            colClass = `grid-cols-2`;
-        } else {
-            colClass = `grid-cols-1`;
-        }
-
-        // Determine row class based on the number of rows
-        const rowClass = rows <= 4 ? `grid-rows-${rows}` : `grid-rows-4`;
-
-        return `${colClass} ${rowClass}`;
-    };
-
-
-    const renderGroup = (groupName, items, refMap, isShelf) => {
-        const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
-        return (
-            <div className="flex flex-col items-center mb-8" ref={el => refMap.current[groupName] = el}>
-                <div className="w-full h-full max-w-xs">
-                    <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
-                        {items.map(item => (
-                            <Link href={`/pages/${isShelf ? 'ShelfList' : 'reserve-list'}?item=${item.name}`} key={item.id}>
-                                <div
-                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-800'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
-                                    onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
-                                >
-                                    {item.name}
-                                </div>
-                            </Link>
-                        ))}
-                        {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
-                            <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
-                                {/* Empty slot */}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className='flex'>
-                    <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2.5 mr-1 text-center`}>
-                        {groupName}
-                    </div>
-                    <button
-                        onClick={() => addItem(groupName, isShelf)}
-                        className={`mt-2 p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
-                    >
-                        <PlusIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
-    const renderReservesGroup = () => {
-        return (
-            <div className="mt-2 grid ">
-                <div className={`grid grid-cols-1 gap-4`}>
-                    {Object.keys(reserves).map(reserveName =>
-                        renderGroup(reserveName, reserves[reserveName], reserveRefs, false)
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-
-    return (
-        <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
-            <div className='w-2/3'>
-                <div className="relative flex flex-col">
-                    <div className='flex items-center justify-between w-full mt-6 mb-4'>
-                        <Link href="/pages/Location">
-                            <button
-                                className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
-                            >
-                                <ArrowLeftIcon className="w-6 h-6" />
-                            </button>
-                        </Link>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Shelves</h1>
-                        <div className='flex items-center'>
-                            <input
-                                type="number"
-                                value={shelfGridConfig.rows}
-                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, rows: parseInt(e.target.value) })}
-                                placeholder="Rows"
-                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                                min={1}
-                            />
-                            <input
-                                type="number"
-                                value={shelfGridConfig.cols}
-                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, cols: parseInt(e.target.value) })}
-                                placeholder="Cols"
-                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                                min={1}
-                            />
-                            <button
-                                onClick={() => addGroup(true)}
-                                className={`p-2 ${isDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white rounded-full flex items-center justify-center`}
-                            >
-                                <PlusCircleIcon className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </div>
-                    <div className="mt-2">
-                        <div className={`grid ${getGridClass(shelfGridConfig.rows, shelfGridConfig.cols)} gap-4`}>
-                            {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className='w-1/3'>
-                <div className='items-center relative flex flex-col'>
-                    <div className='flex items-center justify-between w-full mt-6 mb-2'>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Dock</h1>
-                        <div className='flex items-center'>
-                            <input
-                                type="number"
-                                value={reserveGridConfig.rows}
-                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value) })}
-                                placeholder="Rows"
-                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                                min={1}
-                            />
-                            <input
-                                type="number"
-                                value={reserveGridConfig.cols}
-                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value) })}
-                                placeholder="Cols"
-                                className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                                min={1}
-                            />
-                        </div>
-                        <button
-                            onClick={() => addGroup(false)}
-                            className={`p-2 ${isDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white rounded-full mr-8 flex items-center justify-center`}
-                        >
-                            <PlusCircleIcon className="w-6 h-6" />
-                        </button>
-                    </div>
-                    <div className='mt-2'>
-                        {renderReservesGroup()}
-                    </div>
-                </div>
-            </div>
+  return (
+    <div
+      ref={(node) => ref(drop(node))}
+      className={`border border-gray-400 cursor-move ${isSelected ? 'bg-blue-200' : ''}`}
+      onClick={() => onSelectCell(cell.id)}
+      style={{
+        width: `${cell.width}px`,
+        height: `100px`,
+      }}
+    >
+      <div className='px-2 pt-1 flex flex-col'>
+        <div className="flex justify-between">
+          <span>Shelf list {cell.id + 1}</span>
+          <div className="text-xs text-gray-400 flex">
+            Space
+            {100 - totalPercentage}%
+          </div>
         </div>
-    );
-}    
+        <div className="text-xs text-gray-400 flex">
+          Volume: {cell.volume} cm³
+        </div>
+      </div>
+      <div className='w-full h-2/3 mb-0 flex border border-zinc-600'>
+        {barData.map((bar, barIndex) => (
+          <div
+            key={barIndex}
+            className={`h-full border border-zinc-600 ${bar.color} flex items-center justify-center`}
+            style={{ width: `${bar.percentage}%` }}
+          >
+            {bar.percentage > 0 && (
+              <div className="flex flex-col items-center justify-center text-xs text-white">
+                <span>{bar.label}</span>
+                <span>{bar.percentage}%</span>
+                <span>{bar.weight}kg</span>
+              </div>
+            )}
+          </div>
+        ))}
+        {100 - totalPercentage > 0 && (
+          <div
+            className='h-full border border-zinc-600 flex items-center justify-center bg-gray-100 text-zinc-500 text-xs'
+            style={{ width: `${100 - totalPercentage}%` }}
+          >
+            {100 - totalPercentage}%
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default function ShelfList() {
+  const [cells, setCells] = useState<Cell[]>([
+    { id: 0, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
+    { id: 1, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
+    { id: 2, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
+    { id: 3, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 }
+  ]);
+
+  const [dimensionX, setDimensionX] = useState<number | string>('');  // Height
+  const [dimensionY, setDimensionY] = useState<number | string>('');  // Width
+  const [dimensionZ, setDimensionZ] = useState<number | string>('');  // Depth
+  const [selectedCellId, setSelectedCellId] = useState<number | null>(null);
+  const [isSorted, setIsSorted] = useState(false);
+  const [templates, setTemplates] = useState<{ id: number; cells: Cell[] }[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+
+  const handleInputChange = (setDimension: React.Dispatch<React.SetStateAction<number | string>>) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = event.target.value.replace(/^0+/, ''); // Remove leading zeroes
+    setDimension(value === '' ? '' : Number(value)); // Convert to number if not empty
+  };
+
+  const addNewShelfList = () => {
+    const newCellId = cells.length;
+    const volume = Number(dimensionX) * Number(dimensionY) * Number(dimensionZ);
+
+    const newCell: Cell = {
+      id: newCellId,
+      merged: false,
+      colspan: 1,
+      rowspan: 1,
+      width: 700,
+      height: 100,
+      volume: volume
+    };
+
+    setCells([...cells, newCell]);
+    setDimensionX('');
+    setDimensionY('');
+    setDimensionZ('');
+  };
+
+  const moveCell = (dragIndex: number, hoverIndex: number) => {
+    const updatedCells = [...cells];
+    const [movedCell] = updatedCells.splice(dragIndex, 1);
+    updatedCells.splice(hoverIndex, 0, movedCell);
+    setCells(updatedCells);
+  };
+
+  const handleCellSelect = (cellId: number) => {
+    setSelectedCellId(cellId);
+  };
+
+  const selectedCellDetail = cells.find(cell => cell.id === selectedCellId);
+
+  const barDataList = [
+    [
+      { label: 'Oishi', weight: 10, percentage: 10, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
+      { label: 'Singha', weight: 10, percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
+      { label: 'Leo', weight: 10, percentage: 50, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
+      { label: 'Blend', weight: 10, percentage: 20, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
+    ],
+    [
+      { label: 'Oishi', percentage: 30, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
+      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
+      { label: 'Leo', percentage: 10, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
+      { label: 'Blend', percentage: 40, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
+    ],
+    [
+      { label: 'Oishi', percentage: 10, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
+      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' }
+    ],
+    [
+      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
+      { label: 'Leo', percentage: 50, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
+      { label: 'Blend', percentage: 20, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
+    ]
+  ];
+
+  const confirmSorting = () => {
+    const sortedCells = [...cells].sort((a, b) => a.id - b.id);
+    const renamedCells = sortedCells.map((cell, index) => ({
+      ...cell,
+      id: index
+    }));
+    setCells(renamedCells);
+    setIsSorted(true);
+  };
+
+  const saveTemplate = () => {
+    const newTemplate = {
+      id: Date.now(),
+      cells: [...cells] // or a deep copy if needed
+    };
+    setTemplates([...templates, newTemplate]);
+  };
+
+  const loadTemplate = (templateId: number) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setCells(template.cells);
+      setSelectedTemplateId(templateId);
+    }
+  };
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className="flex">
+        <div className="overflow-x-auto flex-1 p-4 relative">
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(1, 100px)` }}>
+            {cells.map((cell, index) =>
+              <DraggableCell
+                key={cell.id}
+                cell={cell}
+                index={index}
+                moveCell={moveCell}
+                onSelectCell={handleCellSelect}
+                isSelected={cell.id === selectedCellId}
+                barData={barDataList[index % barDataList.length]}
+              />
+            )}
+          </div>
+          <div className='flex mt-10'>
+            <button
+              onClick={confirmSorting}
+              className="bg-green-500 text-white p-2 rounded mr-2"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={saveTemplate}
+              className="bg-blue-500 text-white p-2 rounded"
+            >
+              Save Template
+            </button>
+          </div>
+        </div>
+        <div className="w-1/5 p-4 border-l border-gray-300 flex flex-col">
+          {selectedCellDetail && (
+            <div>
+              <p className="text-md text-gray-800 font-bold mt-4">Shelf list {selectedCellDetail.id + 1}</p>
+              <p className="mt-2 ml-4">Volume: {selectedCellDetail.volume} cm³</p>
+              <p className="text-md text-gray-800 font-bold mt-4">Item:</p>
+            </div>
+          )}
+        </div>
+        <div className="w-1/5 p-4 border-l border-gray-300 flex flex-col items-center">
+          <div className="mt-4">
+            <p className="text-md font-bold">Add New Shelf List</p>
+            <div className="flex flex-col gap-2 mt-2 ml-4">
+              <label>
+                Height
+                <input
+                  type="number"
+                  value={dimensionX}
+                  placeholder='cm'
+                  onChange={handleInputChange(setDimensionX)}
+                  className="border border-gray-300 p-2"
+                />
+              </label>
+              <label>
+                Width
+                <input
+                  type="number"
+                  value={dimensionY}
+                  placeholder='cm'
+                  onChange={handleInputChange(setDimensionY)}
+                  className="border border-gray-300 p-2"
+                />
+              </label>
+              <label>
+                Depth
+                <input
+                  type="number"
+                  value={dimensionZ}
+                  placeholder='cm'
+                  onChange={handleInputChange(setDimensionZ)}
+                  className="border border-gray-300 p-2"
+                />
+              </label>
+              <button
+                onClick={addNewShelfList}
+                className="mt-4 bg-blue-500 text-white p-2 rounded"
+              >
+                Add New Shelf
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className='relative mx-auto'>
+              <p className="text-lg font-bold">Saved Templates</p>
+              <p className='text-xs text-gray-600'>Use template will be replace shelf</p>
+            </div>
+            <ul>
+              {templates.map(template => (
+                <li key={template.id} className="mt-2">
+                  <button
+                    onClick={() => loadTemplate(template.id)}
+                    className={`p-2 rounded ${selectedTemplateId === template.id ? 'bg-gray-300' : 'bg-gray-100'}`}
+                  >
+                    Template {template.id}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </DndProvider>
+  );
+}

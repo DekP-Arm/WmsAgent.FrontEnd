@@ -29,7 +29,7 @@ export function Navbar() {
       </button>
 
       <div className="">
-        <Link href="/pages/Warehouse">
+        <Link href="/pages/Main">
           <button className={`${isDarkMode ? 'text-white' : 'text-black'} text-lg px-1 font-bold rounded-lg`}>
             WMS
           </button>
