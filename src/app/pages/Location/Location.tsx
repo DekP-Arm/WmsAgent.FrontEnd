@@ -13,7 +13,7 @@ export function Location() {
         ZoneB: [{ id: 1, name: 'Shelf BA' }, { id: 2, name: 'Shelf BB' }]
     });
     const [reserves, setReserves] = useState({
-        DockA: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
+        DockA: [{ id: 1, name: 'Group AA' }, { id: 2, name: 'Palette 2' }],
         DockB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
     });
 
