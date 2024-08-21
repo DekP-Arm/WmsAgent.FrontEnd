@@ -12,16 +12,14 @@ export default function Warehouse() {
 
     
     const { isDarkMode } = useTheme();
-    const [warehouses, setWarehouses] = useState([{ id: 1, name: "Warehouse A", isEditing: false }]);
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const router = useRouter();
 
-    const [wareHousesData, setWareHousesData] = useState<{ warehouseId: number; warehouseName: string; isEditing: boolean; tenetId: number }[]>([]);
+    const [wareHousesData, setWareHousesData] = useState<{ warehouseId: number; warehouseName: string; isEditing: boolean; tenantId: number }[]>([]);
 
     const fetchGetData = async () => {
         try {
             const response = await axios.get('http://localhost:5012/api/Warehouse/GetAllWarehouses');
-            const dataWithIsEditing = response.data.map((wh: { warehouseId: number; warehouseName: string; tenetId: number }) => ({
+            const dataWithIsEditing = response.data.map((wh: { warehouseId: number; warehouseName: string; tenantId: number }) => ({
                 ...wh,
                 isEditing: false
             }));
@@ -32,25 +30,41 @@ export default function Warehouse() {
             setWareHousesData([]); 
         }
     }
-    const fetchUpdateData = async (warehouseNameOld : string , warehouseNameNew: string ,tenetId : number) => {
+    const fetchUpdateData = async (warehouseId : number , newWarehouseName: string ,newTenantId : number) => {
         try{
-            const response = await axios.put('http://localhost:5012/api/Warehouse/UpdateWarehouse', {warehouseNameOld , warehouseNameNew , tenetId})
+            const response = await axios.put('http://localhost:5012/api/Warehouse/UpdateWarehouse', {warehouseId , newWarehouseName , newTenantId});
         }catch(e){
             console.error(e);
         }
     };
 
-    const fetchAddData = async (warehouseName : string , tenetId : number) => {
+    const fetchAddData = async (warehouseName : string , tenantId : number) => {
         try{
-            const response = await axios.post('http://localhost:5012/api/Warehouse/AddWarehouse', {warehouseName , tenetId})
+            const response = await axios.post('http://localhost:5012/api/Warehouse/AddWarehouse', {warehouseName , tenantId});
         }catch(e){
             console.error(e)
         }
     }
 
-    const toggleEdit = async (warehouseId : number,warehouseName : string , tenetId : number) => {
-        try{
-            const { newWarehouseName, isConfirmed } = Swal.fire({
+    const fetchDeleteData = async (warehouseId: number) => {
+        try {
+            const response = await axios.delete(`http://localhost:5012/api/Warehouse/DeleteWarehouse`, {
+                data: { warehouseId },
+                headers: {
+                    'Content-Type': 'application/json' // Ensure correct content type
+                }
+            });
+            console.log(response.data);
+        } catch (e) {
+            console.error('Error deleting warehouse:', e);
+        }
+    };
+    
+
+    const toggleEdit = async (warehouseId: number, warehouseName: string, tenantId: number) => {
+        try {
+            console.log(warehouseId,tenantId);
+            const { value: newWarehouseName, isConfirmed } = await Swal.fire({
                 title: 'Update Warehouse',
                 input: 'text',
                 inputPlaceholder: warehouseName,
@@ -60,43 +74,28 @@ export default function Warehouse() {
                         return 'Name is required';
                     }
                 }
-            });     
-            
+            });
+    
+            console.log(newWarehouseName);
+    
             if (isConfirmed && newWarehouseName) {
-                
-                await fetchUpdateData(warehouseName, newWarehouseName, tenetId);
+                await fetchUpdateData(warehouseId, newWarehouseName, tenantId);
     
                 setWareHousesData(wareHousesData?.map(wh =>
-                    wh.warehouseId === warehouseId ? { ...wh, name: newWarehouseName } : wh
+                    wh.warehouseId === warehouseId ? { ...wh, warehouseName: newWarehouseName } : wh
                 ));
-
-
             }
-        }catch(e){
-            console.error("Error updating warehouse name: ",e);
+        } catch (e) {
+            console.error("Error updating warehouse name: ", e);
         }
     };
 
-    const updateWarehouseName = async (warehouseId : number, name : string , tenetId : number) => {
+    const updateWarehouseName = async (warehouseId : number, name : string , tenantId : number) => {
         setWareHousesData(wareHousesData?.map(wh =>
             wh.warehouseId === warehouseId ? { ...wh, name: name } : wh
         ));
         
     };
-
-    // const getNextWarehouseName = () => {
-    //     return `Warehouse ${alphabet[warehouses.length]}`;
-    // };
-
-    // const addWarehouse = () => {
-    //     const newWarehouseName = ;
-    //     setWarehouses([
-    //         ...wareHousesData,
-    //         { warehouseId: wareHousesData.length + 1, warehouseName: newWarehouseName, tenetId : ,isEditing: false }
-    //     ]);
-    // };
-
-
 
     const addWarehouse = async () => {
         try{
@@ -138,6 +137,44 @@ export default function Warehouse() {
         }
     };
 
+    const toggleDelete = async (warehouseId : number) => {
+        console.log(warehouseId);
+        try{
+            const { isConfirmed } = await Swal.fire({
+                title: 'Delete Warehouse',
+                text: 'Are you sure you want to delete this warehouse?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel'
+            });
+            if (isConfirmed) {
+                console.log(warehouseId);
+    
+                // Second confirmation dialog
+                const { isConfirmed: isDoubleConfirmed } = await Swal.fire({
+                    title: 'Are you absolutely sure?',
+                    text: 'This action cannot be undone. Do you still want to delete this warehouse?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel',
+                });
+    
+                if (isDoubleConfirmed) {
+                    console.log(warehouseId);
+                    await fetchDeleteData(warehouseId); // Make sure to await this
+                    await fetchGetData(); // Refresh data after deletion
+                }
+                
+            }
+        }catch(e){
+            console.error("Error deleting warehouse: ",e);
+        }
+    }
+
+
+
     const navigate = (id : number) => {
         router.push(`/pages/main?id=${id}`);
     }
@@ -166,8 +203,8 @@ export default function Warehouse() {
                                 <input
                                     type="text"
                                     value={wh.warehouseName}
-                                    onChange={(e) => updateWarehouseName(wh.warehouseId, e.target.value ,wh.tenetId)}
-                                    onBlur={() => updateWarehouseName(wh.warehouseId, wh.warehouseName ,wh.tenetId)}
+                                    onChange={(e) => updateWarehouseName(wh.warehouseId, e.target.value ,wh.tenantId)}
+                                    onBlur={() => updateWarehouseName(wh.warehouseId, wh.warehouseName ,wh.tenantId)}
                                     className='text-black w-full'
                                     autoFocus
                                 />
@@ -176,14 +213,25 @@ export default function Warehouse() {
                             )}
                         </a>
                         <button
-                            className="absolute top-2 right-2"
+                            className="absolute top-1 right-2"
                             onClick={(e) => {
                                 e.stopPropagation(); // Prevent the navigation when clicking the icon
-                                toggleEdit(wh.warehouseId,wh.warehouseName,wh.tenetId);
+                                toggleEdit(wh.warehouseId,wh.warehouseName,wh.tenantId);
                             }}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487l3.65 3.65m-.53 1.943l-7.82 7.82-4.285.713.714-4.285 7.82-7.82m2.12-2.121l2.12-2.12m-2.12 2.12l2.121 2.121" />
+                            </svg>
+                        </button>
+                        <button className="absolute bottom-1 right-2"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleDelete(wh.warehouseId);
+                                }}
+                        
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                             </svg>
                         </button>
                     </div>
@@ -224,6 +272,7 @@ export default function Warehouse() {
                     <button onClick={() => addWarehouse()} className='py-3 px-5 bg-gray-300 text-white text-xl flex items-center justify-center'>
                          Add Warehouse
                     </button>
+
                  </div>
              </div>
     );
