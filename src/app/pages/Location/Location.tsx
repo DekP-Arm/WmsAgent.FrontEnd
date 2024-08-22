@@ -1,21 +1,79 @@
 "use client";
 import { useTheme } from '~/app/_context/Theme';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
 import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'; // Import icons
 
 export function Location() {
+
+    // const [shelves, setShelves] = useState({
+        // ZoneA: [{ id: 1, name: 'Shelf AA' }, { id: 2, name: 'Shelf AB' }],
+        // ZoneB: [{ id: 1, name: 'Shelf BA' }, { id: 2, name: 'Shelf BB' }]
+    // });
+
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    const [shelves, setShelves] = useState({
-        ZoneA: [{ id: 1, name: 'Shelf AA' }, { id: 2, name: 'Shelf AB' }],
-        ZoneB: [{ id: 1, name: 'Shelf BA' }, { id: 2, name: 'Shelf BB' }]
-    });
     const [reserves, setReserves] = useState({
         DockA: [{ id: 1, name: 'Group AA' }, { id: 2, name: 'Palette 2' }],
         DockB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
     });
+    const [warehouseName, setWarehouseName] = useState('');
+    interface ShelvesState {
+        [locationName: string]: ShelfResult[];
+    }
+
+    interface ShelfResult {
+        shelfName: string | null;
+        shelfId: number;
+    }
+ 
+
+    interface LocationWarehouseIdResult {
+        locationId: number;
+        locationName: string;
+        locationType: string;
+        warehouseId: number;
+        warehouseName: string;
+        shelfName: string | null;
+        shelfId: number;
+        shelves: ShelfResult[];
+    }
+
+    const [shelves, setShelves] = useState<ShelvesState>({});
+
+    const fetchDataLocation = async(warehouseId : number) => {
+        try{
+            const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
+            const data = await response.json();
+            console.log(data);
+            const newShelves: ShelvesState = {};
+
+            data.forEach((location: LocationWarehouseIdResult) => {
+                newShelves[location.locationName] = location.shelves.map(shelf => ({
+                    shelfName: shelf.shelfName,
+                    shelfId: shelf.shelfId
+                }));
+            });
+            console.log("asdasd",newShelves)
+            setShelves(newShelves);
+            setWarehouseName(data[0].warehouseName);
+
+        }catch(e){
+            console.error(e);
+        }
+    }
+
+    const getWarehouseIdFromUrl = () => {
+        const params = new URLSearchParams(location.search);
+        return Number(params.get('id')); // ดึงค่าของพารามิเตอร์ id และแปลงเป็นตัวเลข
+    };
+
+
+    useEffect(() => {
+        const warehouseId = getWarehouseIdFromUrl(); // ดึง warehouseId จาก URL
+        fetchDataLocation(warehouseId);
+    }, []);
 
     const [selectedItem, setSelectedItem] = useState(null);
     const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
@@ -94,7 +152,7 @@ export function Location() {
     const renderGroup = (groupName, items, refMap, isShelf) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         return (
-            <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => refMap.current[groupName] = el}>
+            <div className="flex flex-col mb-8 ml-6 bg-zinc-800 p-4 pb-8" ref={el => refMap.current[groupName] = el}>
                 <div className='flex'>
                     <div className={`${isDarkMode ? 'text-white' : 'text-black'} mr-1 text-white text-center`}>
                         {groupName}
@@ -112,11 +170,11 @@ export function Location() {
                         <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
                             {items.map(item => (
                                 <div
-                                    key={item.id} // Add a key prop for unique identification
+                                    key={item.shelfId} // Add a key prop for unique identification
                                     className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-800'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
-                                    onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
+                                    onClick={() => handleItemClick({ id: item.shelfId, name: item.shelfName  }, groupName, isShelf)}
                                 >
-                                    {item.name}
+                                    {item.shelfName}
                                 </div>
                             ))}
                             {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
@@ -148,14 +206,14 @@ export function Location() {
             <div className='w-2/3'>
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
-                        <Link href="/pages/Warehouse">
+                        <Link href="/pages/warehouse">
                             <button
                                 className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
                             >
                                 <ArrowLeftIcon className="w-6 h-6" />
                             </button>
                         </Link>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Location</h1>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>{warehouseName}</h1>
                         <div className='flex items-center'>
                             <input
                                 type="number"

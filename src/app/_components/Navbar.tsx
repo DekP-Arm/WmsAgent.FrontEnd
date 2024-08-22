@@ -14,7 +14,7 @@ export function Navbar() {
   return (
     <nav className={`${isDarkMode ? 'bg-zinc-800' : 'bg-gray-200'} p-2 flex sticky top-0 z-50 buttonClick duration-500 items-center`}>
       <button onClick={toggleTheme} className="">
-        <svg className={`${isDarkMode ? 'text-gray-200' : 'text-black'} hover:scale-125 duration-200 h-7 w-7 ml-2`} width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg className={`${isDarkMode ? 'text-gray-200' : 'text-black'} hover:scale-125 duration-200 h-7 w-7 ml-2`} width="20" height="20" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path stroke="none" d="M0 0h24v24H0z" />
           <circle cx="12" cy="12" r="3" />
           <line x1="12" y1="5" x2="12" y2="3" />
@@ -29,7 +29,7 @@ export function Navbar() {
       </button>
 
       <div className="">
-        <Link href="/pages/Warehouse">
+        <Link href="/pages/warehouse">
           <button className={`${isDarkMode ? 'text-white' : 'text-black'} text-lg px-1 font-bold rounded-lg`}>
             WMS
           </button>
