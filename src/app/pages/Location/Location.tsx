@@ -1,26 +1,86 @@
 "use client";
 import { useTheme } from '~/app/_context/Theme';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
 import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useParams, useRouter } from 'next/navigation';
 
 export function Location() {
+
+    // const [shelves, setShelves] = useState({
+        // ZoneA: [{ id: 1, name: 'Shelf AA' }, { id: 2, name: 'Shelf AB' }],
+        // ZoneB: [{ id: 1, name: 'Shelf BA' }, { id: 2, name: 'Shelf BB' }]
+    // });
+
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
-    const params = new URLSearchParams(window.location.search);
-    const warehouseId = params.get('warehouseId');
-    const locationId = params.get('id');
 
-    const [shelves, setShelves] = useState({
-        GroupShelfA: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }],
-        GroupShelfB: [{ id: 3, name: 'Shelf 3' }, { id: 4, name: 'Shelf 4' }]
-    });
+    // const [shelves, setShelves] = useState({
+    //     GroupShelfA: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }],
+    //     GroupShelfB: [{ id: 3, name: 'Shelf 3' }, { id: 4, name: 'Shelf 4' }]
+    // });
     const [reserves, setReserves] = useState({
         GroupAA: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
         GroupAB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
     });
+    const [warehouseName, setWarehouseName] = useState('');
+    interface ShelvesState {
+        [locationName: string]: ShelfResult[];
+    }
+
+    interface ShelfResult {
+        id: number;
+        name : string | null;
+    }
+ 
+
+    interface LocationWarehouseIdResult {
+        locationId: number;
+        locationName: string;
+        locationType: string;
+        warehouseId: number;
+        warehouseName: string;
+        shelves: ShelfResult[];
+    }
+
+    const [shelves, setShelves] = useState<ShelvesState>({});
+
+    const fetchDataLocation = async(warehouseId : number) => {
+        try{
+            const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
+            const data=  await response.json();
+            const newShelves: ShelvesState = {};
+
+            data.forEach((location: LocationWarehouseIdResult) => {
+                console.log('Processing Location:', location);  
+                const key = `${location.locationId}-${location.locationName}`; 
+                newShelves[key] = location.shelves.map((shelf) => ({
+                    name: shelf.shelfName,
+                    id: shelf.shelfId,
+                }));
+            });
+
+
+            console.log("check newshelves",newShelves)
+            setShelves(newShelves);
+            setWarehouseName(data[0].warehouseName);
+
+        }catch(e){
+            console.error(e);
+        }
+    }
+
+    const getWarehouseIdFromUrl = () => {
+        const params = new URLSearchParams(location.search);
+        return Number(params.get('id')); // ดึงค่าของพารามิเตอร์ id และแปลงเป็นตัวเลข
+    };
+
+
+    useEffect(() => {
+        const warehouseId = getWarehouseIdFromUrl(); // ดึง warehouseId จาก URL
+        fetchDataLocation(warehouseId);
+    }, []);
 
     const [selectedItem, setSelectedItem] = useState(null);
     const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
@@ -156,13 +216,13 @@ export function Location() {
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
                         
-                            <button onClick={() => router.push(`/pages/Warehouse?id=${warehouseId}`)}
+                            <button onClick={() => router.push(`/pages/Main`)}
                                 className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
                             >
                                 <ArrowLeftIcon className="w-6 h-6" />
                             </button>
                         
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Location Zone {locationId}</h1>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>{warehouseName}</h1>
                         <div className='flex items-center'>
                             <input
                                 type="number"
