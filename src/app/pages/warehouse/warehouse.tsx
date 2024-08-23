@@ -32,16 +32,11 @@ export function Warehouse() {
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const warehouseId = searchParams.get('id');
 
-    const [shelves, setShelves] = useState({
-        ZoneA: [{ id: 1, name: 'Group Shelf AA' }, { id: 2, name: 'Group Shelf AB' }],
-        ZoneB: [{ id: 3, name: 'Group Shelf BA' }, { id: 4, name: 'Group Shelf BB' }]
-    });
+    const [shelves, setShelves] = useState({});
     const [reserves, setReserves] = useState({
-        DockA: [{ id: 1, name: 'Group AA' }, { id: 2, name: 'Group AB' }],
-        DockB: [{ id: 3, name: 'Group BA' }, { id: 4, name: 'Group BB' }]
+        DockA: [{ id: 1, name: 'AA' }, { id: 2, name: 'AB' }],
+        DockB: [{ id: 3, name: 'BA' }, { id: 4, name: 'BB' }]
     });
     const [selectedItem, setSelectedItem] = useState(null);
     const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
@@ -184,7 +179,7 @@ export function Warehouse() {
                                 className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
                                 onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
                             >
-                                {item.name}
+                                Group {item.name}
                             </div>
                         ))}
                         {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
