@@ -3,28 +3,81 @@ import { useTheme } from '~/app/_context/Theme';
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import axios from 'axios'; // Ensure axios is installed
 
 export function Warehouse() {
+
+    interface ShelvesState {
+        [locationName: string]: ShelfResult[];
+    }
+
+    interface ShelfResult {
+        id: number;
+        name : string | null;
+    }
+
+    interface LocationWarehouseIdResult {
+        locationId: number;
+        locationName: string;
+        locationType: string;
+        warehouseId: number;
+        warehouseName: string;
+        shelves: ShelfResult[];
+    }
+
+    const [warehouseName, setWarehouseName] = useState('');
+    // const [shelves, setShelves] = useState<ShelvesState>({});
+
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const warehouseId = searchParams.get('id');
 
-    const [shelves, setShelves] = useState({
-        ZoneA: [{ id: 1, name: 'Group Shelf AA' }, { id: 2, name: 'Group Shelf AB' }],
-        ZoneB: [{ id: 3, name: 'Group Shelf BA' }, { id: 4, name: 'Group Shelf BB' }]
-    });
+    const [shelves, setShelves] = useState({});
     const [reserves, setReserves] = useState({
-        DockA: [{ id: 1, name: 'Group AA' }, { id: 2, name: 'Group AB' }],
-        DockB: [{ id: 3, name: 'Group BA' }, { id: 4, name: 'Group BB' }]
+        DockA: [{ id: 1, name: 'AA' }, { id: 2, name: 'AB' }],
+        DockB: [{ id: 3, name: 'BA' }, { id: 4, name: 'BB' }]
     });
     const [selectedItem, setSelectedItem] = useState(null);
     const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
     const [reserveGridConfig, setReserveGridConfig] = useState({ rows: 4, cols: 2 });
     const shelfRefs = useRef({});
     const reserveRefs = useRef({});
+
+    const getWarehouseIdFromUrl = () => {
+        const params = new URLSearchParams(location.search);
+        return Number(params.get('id')); // ดึงค่าของพารามิเตอร์ id และแปลงเป็นตัวเลข
+    };
+
+    useEffect(() => {
+        const warehouseId = getWarehouseIdFromUrl(); // ดึง warehouseId จาก URL
+        fetchDataLocation(warehouseId);
+    }, []);
+
+    const fetchDataLocation = async(warehouseId : number) => {
+        try{
+            const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
+            const data=  await response.json();
+            const newShelves: ShelvesState = {};
+
+            data.forEach((location: LocationWarehouseIdResult) => {
+                console.log('Processing Location:', location);  
+                const key = `${location.locationId}-${location.locationName}`; 
+                newShelves[key] = location.shelves.map((shelf) => ({
+                    name: shelf.shelfName,
+                    id: shelf.shelfId,
+                }));
+            });
+
+
+            console.log("check newshelves",newShelves)
+            setShelves(newShelves);
+            setWarehouseName(data[0].warehouseName);
+
+        }catch(e){
+            console.error(e);
+        }
+    }
 
 
     const handleItemClick = (item, groupName, isShelf) => {
@@ -126,7 +179,7 @@ export function Warehouse() {
                                 className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
                                 onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
                             >
-                                {item.name}
+                                Group {item.name}
                             </div>
                         ))}
                         {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
@@ -163,7 +216,7 @@ export function Warehouse() {
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow}`}>
-                            {`Warehouse ${warehouseId}`}
+                            {warehouseName}
                         </h1>
                         <div className='flex items-center'>
                             <input
@@ -202,7 +255,7 @@ export function Warehouse() {
             <div className='w-1/3'>
                 <div className='items-center relative flex flex-col'>
                     <div className='flex items-center justify-between w-full mt-6 mb-2'>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow}`}>Dock</h1>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center mx-auto text-2xl font-bold flex-grow}`}>Dock</h1>
                         <input
                             type="number"
                             value={reserveGridConfig.rows}
