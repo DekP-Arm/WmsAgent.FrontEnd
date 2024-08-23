@@ -178,7 +178,7 @@ export default function Main() {
 
     const navigate = (id : number) => {
         // router.push(`/pages//Warehouse?id=${id}`);
-        router.push(`/pages/Location?id=${id}`);
+        router.push(`/pages/Warehouse?id=${id}`);
     }
     // const navigateToWarehouse = (id) => {
     //     router.push(`/pages/main?id=${id}`);

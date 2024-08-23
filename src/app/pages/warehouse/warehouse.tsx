@@ -3,9 +3,32 @@ import { useTheme } from '~/app/_context/Theme';
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import axios from 'axios'; // Ensure axios is installed
 
 export function Warehouse() {
+
+    interface ShelvesState {
+        [locationName: string]: ShelfResult[];
+    }
+
+    interface ShelfResult {
+        id: number;
+        name : string | null;
+    }
+
+    interface LocationWarehouseIdResult {
+        locationId: number;
+        locationName: string;
+        locationType: string;
+        warehouseId: number;
+        warehouseName: string;
+        shelves: ShelfResult[];
+    }
+
+    const [warehouseName, setWarehouseName] = useState('');
+    // const [shelves, setShelves] = useState<ShelvesState>({});
+
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
@@ -25,6 +48,41 @@ export function Warehouse() {
     const [reserveGridConfig, setReserveGridConfig] = useState({ rows: 4, cols: 2 });
     const shelfRefs = useRef({});
     const reserveRefs = useRef({});
+
+    const getWarehouseIdFromUrl = () => {
+        const params = new URLSearchParams(location.search);
+        return Number(params.get('id')); // ดึงค่าของพารามิเตอร์ id และแปลงเป็นตัวเลข
+    };
+
+    useEffect(() => {
+        const warehouseId = getWarehouseIdFromUrl(); // ดึง warehouseId จาก URL
+        fetchDataLocation(warehouseId);
+    }, []);
+
+    const fetchDataLocation = async(warehouseId : number) => {
+        try{
+            const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
+            const data=  await response.json();
+            const newShelves: ShelvesState = {};
+
+            data.forEach((location: LocationWarehouseIdResult) => {
+                console.log('Processing Location:', location);  
+                const key = `${location.locationId}-${location.locationName}`; 
+                newShelves[key] = location.shelves.map((shelf) => ({
+                    name: shelf.shelfName,
+                    id: shelf.shelfId,
+                }));
+            });
+
+
+            console.log("check newshelves",newShelves)
+            setShelves(newShelves);
+            setWarehouseName(data[0].warehouseName);
+
+        }catch(e){
+            console.error(e);
+        }
+    }
 
 
     const handleItemClick = (item, groupName, isShelf) => {
@@ -163,7 +221,7 @@ export function Warehouse() {
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow}`}>
-                            {`Warehouse ${warehouseId}`}
+                            {warehouseName}
                         </h1>
                         <div className='flex items-center'>
                             <input
