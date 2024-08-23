@@ -5,8 +5,9 @@ interface Item {
   name: string;
   quantity: number;
   unit: string;
-  dockId?: string; // Added for storing dock ID
-  palette?: string; // Added for storing palette
+  dockId?: string;
+  paletteId?: string; // เปลี่ยนเป็น paletteId
+  isAdded: boolean; // เพิ่มสถานะ isAdded
 }
 
 interface Order {
@@ -14,25 +15,30 @@ interface Order {
   items: Item[];
 }
 
+interface Palette {
+  id: string;
+  name: string;
+}
+
 interface Dock {
   id: string;
   name: string;
-  palettes: string[];
+  palettes: Palette[];
 }
 
 const initialOrders: Order[] = [
   {
     id: 1,
     items: [
-      { id: 'item1', name: 'ช้าง', quantity: 12, unit: 'pac' },
-      { id: 'item2', name: 'สิงห์', quantity: 13, unit: 'pac' },
+      { id: 'item1', name: 'ช้าง', quantity: 12, unit: 'pac', isAdded: true },
+      { id: 'item2', name: 'สิงห์', quantity: 13, unit: 'pac', isAdded: false },
     ],
   },
   {
     id: 2,
     items: [
-      { id: 'item3', name: 'ลีโอ', quantity: 14, unit: 'pac' },
-      { id: 'item4', name: 'อิชิตัน', quantity: 15, unit: 'pac' },
+      { id: 'item3', name: 'ลีโอ', quantity: 14, unit: 'pac', isAdded: false },
+      { id: 'item4', name: 'อิชิตัน', quantity: 15, unit: 'pac', isAdded: true },
     ],
   },
 ];
@@ -41,12 +47,21 @@ const initialDocks: Dock[] = [
   {
     id: 'dock1',
     name: 'GroupAA',
-    palettes: ['Palette 1','Palette 2','Palette 3','Palette 4','Palette 5'],
+    palettes: [
+      { id: 'palette1', name: 'Palette 1' },
+      { id: 'palette2', name: 'Palette 2' },
+      { id: 'palette3', name: 'Palette 3' },
+      { id: 'palette4', name: 'Palette 4' },
+      { id: 'palette5', name: 'Palette 5' },
+    ],
   },
   {
     id: 'dock2',
     name: 'GroupAB',
-    palettes: ['Palette 1', 'Palette 2'],
+    palettes: [
+      { id: 'palette1', name: 'Palette 1' },
+      { id: 'palette2', name: 'Palette 2' },
+    ],
   },
 ];
 
@@ -55,8 +70,9 @@ export function Orders() {
   const [docks] = useState<Dock[]>(initialDocks);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
-  const [selectedPalette, setSelectedPalette] = useState<string>('');
+  const [selectedPaletteId, setSelectedPaletteId] = useState<string>('');
   const [selectedDockId, setSelectedDockId] = useState<string>('');
+  
 
   const handleDockChange = (orderId: number, itemId: string, dockId: string) => {
     setOrders((prevOrders) =>
@@ -65,7 +81,7 @@ export function Orders() {
           ? {
               ...order,
               items: order.items.map((item) =>
-                item.id === itemId ? { ...item, dockId } : item
+                item.id === itemId ? { ...item, dockId} : item
               ),
             }
           : order
@@ -73,14 +89,14 @@ export function Orders() {
     );
   };
 
-  const handlePaletteChange = (orderId: number, itemId: string, palette: string) => {
+  const handlePaletteChange = (orderId: number, itemId: string, paletteId: string) => {
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
         order.id === orderId
           ? {
               ...order,
               items: order.items.map((item) =>
-                item.id === itemId ? { ...item, palette } : item
+                item.id === itemId ? { ...item, paletteId, isAdded: !!paletteId } : item
               ),
             }
           : order
@@ -88,13 +104,12 @@ export function Orders() {
     );
   };
 
-
-  const handlePaletteClick = (palette: string, dockId: string) => {
-    setSelectedPalette(palette);
+  const handlePaletteClick = (paletteId: string, dockId: string) => {
+    setSelectedPaletteId(paletteId);
     setSelectedDockId(dockId);
 
     const itemsInPalette = orders.flatMap((order) =>
-      order.items.filter((item) => item.palette === palette && item.dockId === dockId)
+      order.items.filter((item) => item.paletteId === paletteId && item.dockId === dockId)
     );
 
     setSelectedItems(itemsInPalette);
@@ -114,13 +129,15 @@ export function Orders() {
               <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Unit</th>
               <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Dock</th>
               <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Palette</th>
+              <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Status</th> {/* เพิ่มคอลัมน์สถานะ */}
             </tr>
           </thead>
           <tbody className='bg-gray-900 divide-y divide-gray-700 text-white'>
             {orders.map((order) => (
+              
               <React.Fragment key={order.id}>
                 {order.items.map((item, index) => (
-                  <tr key={item.id} className='bg-gray-800 hover:bg-gray-700'>
+                  <tr key={item.id} className='bg-gray-800 hover:bg-gray-700' >
                     {index === 0 && (
                       <td
                         rowSpan={order.items.length}
@@ -157,18 +174,21 @@ export function Orders() {
                     <td className='px-6 py-4 whitespace-nowrap text-sm'>
                       <select
                         className='bg-gray-900 text-white rounded px-2 py-1'
-                        value={item.palette || ''}
+                        value={item.paletteId || ''}
                         onChange={(e) => handlePaletteChange(order.id, item.id, e.target.value)}
                       >
                         <option value=''>Select Palette</option>
                         {docks
                           .find((dock) => dock.id === item.dockId)
-                          ?.palettes.map((palette, index) => (
-                            <option key={index} value={palette}>
-                              {palette}
+                          ?.palettes.map((palette) => (
+                            <option key={palette.id} value={palette.id}>
+                              {palette.name}
                             </option>
                           ))}
                       </select>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm'>
+                      {item.isAdded ? 'Added' : 'Not Added'} {/* แสดงสถานะ */}
                     </td>
                   </tr>
                 ))}
@@ -183,15 +203,15 @@ export function Orders() {
           {docks.map((dock) => (
             <div key={dock.id} className='bg-gray-900 p-4 rounded'>
               <div className='grid grid-cols-4 gap-4'>
-                {dock.palettes.map((palette, index) => (
+                {dock.palettes.map((palette) => (
                   <div
-                    key={index}
-                    onClick={() => handlePaletteClick(palette, dock.id)}
+                    key={palette.id}
+                    onClick={() => handlePaletteClick(palette.id, dock.id)}
                     className={`${
                       palette ? 'bg-gray-600 text-white cursor-pointer text-xs' : 'border-2 border-dashed border-gray-500'
                     } text-center py-2`}
                   >
-                    {palette || ''}
+                    {palette.name || ''}
                   </div>
                 ))}
               </div>
@@ -205,7 +225,7 @@ export function Orders() {
       {showPopup && (
         <div className='fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center'>
           <div className='bg-gray-900 p-6 rounded w-1/2'>
-            <h2 className='text-xl font-bold text-white mb-4'>Selected Items for Palette: {selectedPalette}</h2>
+            <h2 className='text-xl font-bold text-white mb-4'>Selected Items for Palette: {selectedPaletteId}</h2>
             <ul>
               {selectedItems.length > 0 ? (
                 selectedItems.map((item) => (
@@ -213,6 +233,7 @@ export function Orders() {
                     <div>Name: {item.name}</div>
                     <div>Quantity: {item.quantity}</div>
                     <div>Unit: {item.unit}</div>
+                    <div>Status: {item.isAdded ? 'Added' : 'Not Added'}</div> {/* แสดงสถานะ */}
                   </li>
                 ))
               ) : (
