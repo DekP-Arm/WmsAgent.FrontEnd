@@ -202,7 +202,7 @@ export function Warehouse() {
             <div className='w-1/3'>
                 <div className='items-center relative flex flex-col'>
                     <div className='flex items-center justify-between w-full mt-6 mb-2'>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow}`}>Dock</h1>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center mx-auto text-2xl font-bold flex-grow}`}>Dock</h1>
                         <input
                             type="number"
                             value={reserveGridConfig.rows}

@@ -190,7 +190,7 @@ export default function Main() {
 
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen h-full relative`}>
-            <div className='grid grid-cols-4 p-4 gap-4 mt-6'>
+            <div className='grid grid-cols-4 p-4 gap-4 '>
                 {wareHousesData.map((wh) => (
                     <div key={`${wh.warehouseId}`} className='relative'>
 
