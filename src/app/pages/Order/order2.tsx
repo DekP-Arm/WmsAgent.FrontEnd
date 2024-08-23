@@ -38,7 +38,7 @@ const initialOrders: Order[] = [
     id: 2,
     items: [
       { id: "item3", name: "ลีโอ", quantity: 14, unit: "pac", isAdded: false },
-      {id: "item4",name: "อิชิตัน",quantity: 15,unit: "pac",isAdded: true,},
+      {id: "item4",name: "อิชิตัน",quantity: 15,unit: "pac",isAdded: false,},
     ],
   },
 ];
@@ -237,7 +237,119 @@ export function Orders2() {
             ))}
           </tbody>
         </table>
+
+        <h1 className="mt-8 mb-4 text-3xl font-bold text-white">Added Items</h1>
+        <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-800 dark:divide-gray-700">
+          <thead className="bg-gray-900 text-white">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                order_id
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                items
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Quantities
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Unit
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Dock
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Palette
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700 bg-gray-900 text-white">
+            {orders.map((order) => (
+              <React.Fragment key={order.id}>
+                {order.items
+                  .filter((item) => item.isAdded)
+                  .map((item, index, filteredItems) => (
+                    <tr key={item.id} className="bg-gray-800 hover:bg-gray-700">
+                      {index === 0 && (
+                        <td
+                          rowSpan={filteredItems.length}
+                          className="whitespace-nowrap px-6 py-4 text-sm font-medium"
+                          style={{ verticalAlign: "middle" }}
+                        >
+                          {order.id}
+                        </td>
+                      )}
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                        <input
+                          type="text"
+                          value={item.name}
+                          readOnly
+                          className="rounded bg-gray-900 px-2 py-1 text-white"
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {item.quantity}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {item.unit}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        <select
+                          className="rounded bg-gray-900 px-2 py-1 text-white"
+                          value={item.dockId || ""}
+                          onChange={(e) =>
+                            handleDockChange(order.id, item.id, e.target.value)
+                          }
+                        >
+                          <option value="">Select Dock</option>
+                          {docks.map((dock) => (
+                            <option key={dock.id} value={dock.id}>
+                              {dock.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        <select
+                          className="rounded bg-gray-900 px-2 py-1 text-white"
+                          value={item.paletteId || ""}
+                          onChange={(e) =>
+                            handlePaletteChange(
+                              order.id,
+                              item.id,
+                              e.target.value,
+                            )
+                          }
+                        >
+                          <option value="">Select Palette</option>
+                          {docks
+                            .find((dock) => dock.id === item.dockId)
+                            ?.palettes.map((palette) => (
+                              <option key={palette.id} value={palette.id}>
+                                {palette.name}
+                              </option>
+                            ))}
+                        </select>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {item.isAdded ? "Added" : "Not Added"}
+                      </td>
+                    </tr>
+                  ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>    
+
+
+
       </div>
+
+            
+
+
       <div className="w-1/4 bg-gray-800 p-16">
         <h2 className="mb-4 text-xl font-bold text-white">DOCK</h2>
         <div className="space-y-8">

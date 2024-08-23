@@ -8,7 +8,7 @@ import "assets/css/main.css";
 export default function Home() {
     return (
         <div className="App">
-            <Order />
+            <Order2 />
         </div>
     );
 }
