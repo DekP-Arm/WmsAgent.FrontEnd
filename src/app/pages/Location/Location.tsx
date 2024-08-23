@@ -30,8 +30,8 @@ export function Location() {
     }
 
     interface ShelfResult {
-        name : string | null;
         id: number;
+        name : string | null;
     }
  
 
@@ -49,18 +49,20 @@ export function Location() {
     const fetchDataLocation = async(warehouseId : number) => {
         try{
             const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
-            const data = await response.json();
-            console.log(data);
+            const data=  await response.json();
             const newShelves: ShelvesState = {};
 
-            
-                data.forEach((location: LocationWarehouseIdResult) => {
-                    newShelves[location.locationName] = location.shelves.map(shelf => ({
-                        name: shelf.shelfName,
-                        id: shelf.shelfId 
-                    }));
-                });
-            console.log("asdasd",newShelves)
+            data.forEach((location: LocationWarehouseIdResult) => {
+                console.log('Processing Location:', location);  
+                const key = `${location.locationId}-${location.locationName}`; 
+                newShelves[key] = location.shelves.map((shelf) => ({
+                    name: shelf.shelfName,
+                    id: shelf.shelfId,
+                }));
+            });
+
+
+            console.log("check newshelves",newShelves)
             setShelves(newShelves);
             setWarehouseName(data[0].warehouseName);
 
@@ -167,9 +169,9 @@ export function Location() {
                 <div className="w-full h-full bg-zinc-800">
                     <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
                         {items.map(item => (
-                            <Link key={item.shelfId} href={`/pages/Shelf?id=${item.id}`}>
+                            <Link key={item.id} href={`/pages/Shelf?id=${item.id}`}>
                                 <div
-                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.shelfId ? 'bg-green-500' : ''}`}
+                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id ? 'bg-green-500' : ''}`}
                                     onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
                                 >
                                     {item.name}
