@@ -37,9 +37,9 @@ export function Navbar() {
       </div>
 
       <div className="ml-2">
-        <Link href="/pages/Shelf">
+        <Link href="/pages/login">
           <button className="bg-black p-1 text-white px-2 rounded-lg">
-            Shelf
+            Log in
           </button>
         </Link>
       </div>

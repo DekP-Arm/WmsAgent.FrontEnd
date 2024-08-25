@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useRouter } from 'next/navigation';
 
 type Cell = {
   id: number;
@@ -102,6 +103,8 @@ const DraggableCell = ({
 };
 
 export default function ShelfList() {
+  const router = useRouter();
+
   const [cells, setCells] = useState<Cell[]>([
     { id: 0, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
     { id: 1, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
