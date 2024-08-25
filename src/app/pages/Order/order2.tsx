@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Item {
   id: string;
@@ -6,6 +6,7 @@ interface Item {
   quantity: number;
   unit: string;
   dockId?: string;
+  groupId?: string;
   paletteId?: string; // เปลี่ยนเป็น paletteId
   isAdded: boolean; // เพิ่มสถานะ isAdded
 }
@@ -30,15 +31,15 @@ const initialOrders: Order[] = [
   {
     id: 1,
     items: [
-      { id: "item1", name: "ช้าง", quantity: 12, unit: "pac", isAdded: false },
-      { id: "item2", name: "สิงห์", quantity: 13, unit: "pac", isAdded: false },
+      { id: "item1", name: "ช้าง", quantity: 12, unit: "pac", isAdded: true, groupId: 'dock1',paletteId: 'palette1'},
+      { id: "item2", name: "สิงห์", quantity: 13, unit: "pac", isAdded: false,groupId: '',paletteId: '' },
     ],
   },
   {
     id: 2,
     items: [
-      { id: "item3", name: "ลีโอ", quantity: 14, unit: "pac", isAdded: false },
-      {id: "item4",name: "อิชิตัน",quantity: 15,unit: "pac",isAdded: false,},
+      { id: "item3", name: "ลีโอ", quantity: 14, unit: "pac", isAdded: false,groupId: '',paletteId: '' },
+      {id: "item4",name: "อิชิตัน",quantity: 15,unit: "pac",isAdded: false,groupId: '',paletteId: ''},
     ],
   },
 ];
@@ -64,6 +65,9 @@ const initialDocks: Dock[] = [
     ],
   },
 ];
+
+
+
 
 export function Orders2() {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
@@ -128,6 +132,43 @@ export function Orders2() {
     setSelectedItems(itemsInPalette);
     setShowPopup(true);
   };
+
+
+  const getDockNameById = (dockId: string | undefined) => {
+    console.log(dockId);
+    
+    return docks.find(dock => dock.id === dockId)?.name || "N/A";
+  };
+
+  const getPaletteNameById = (paletteId: string | undefined, dockId: string | undefined) => {
+    const dock = docks.find(dock => dock.id === dockId);
+    return dock?.palettes.find(palette => palette.id === paletteId)?.name || "N/A";
+    
+  };
+
+  // const SelectedItemsIstrue = (paletteId: string, dockId: string) => {
+  //   // ฟิลเตอร์ items ตาม paletteId และ dockId
+  //   const itemsInPalette = orders.flatMap((order) =>
+  //     order.items.filter(
+  //       (item) => item.paletteId === paletteId && item.dockId === dockId && item.isAdded
+  //     )
+  //   );
+  
+  //   // ตั้งค่าข้อมูลที่เลือก
+  //   setSelectedItems(itemsInPalette);
+  // };
+
+
+  // useEffect(() => {
+    
+  //   const itemsWithValues = orders.flatMap((order) =>
+  //     order.items.filter(item => item.isAdded && item.paletteId && item.dockId)
+  //   );
+  //   const firstItem = itemsWithValues[0]?.groupId!;
+  //   const fiii = itemsWithValues[0]?.paletteId!;
+  //   updateSelectedItems(fiii,firstItem);
+
+  // });
 
   return (
     <div className="flex h-screen w-full bg-neutral-900 text-neutral-50">
@@ -303,8 +344,10 @@ export function Orders2() {
                             handleDockChange(order.id, item.id, e.target.value)
                           }
                         >
-                          <option value="">Select Dock</option>
-                          {docks.map((dock) => (
+                          <option value="">{getDockNameById(item.groupId)}</option>
+                          {docks
+                          .map((dock) => (
+
                             <option key={dock.id} value={dock.id}>
                               {dock.name}
                             </option>
@@ -323,10 +366,12 @@ export function Orders2() {
                             )
                           }
                         >
-                          <option value="">Select Palette</option>
+                          <option value="">{getPaletteNameById(item.paletteId,item.groupId)}</option>
                           {docks
                             .find((dock) => dock.id === item.dockId)
-                            ?.palettes.map((palette) => (
+                            ?.palettes
+                          
+                            .map((palette) => (
                               <option key={palette.id} value={palette.id}>
                                 {palette.name}
                               </option>
@@ -378,34 +423,34 @@ export function Orders2() {
 
       {/* Popup */}
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-          <div className="w-1/2 rounded bg-gray-900 p-6">
-            <h2 className="mb-4 text-xl font-bold text-white">
-              Selected Items for Palette: {selectedPaletteId}
-            </h2>
-            <ul>
-              {selectedItems.length > 0 ? (
-                selectedItems.map((item) => (
-                  <li key={item.id} className="mb-2 text-white">
-                    <div>Name: {item.name}</div>
-                    <div>Quantity: {item.quantity}</div>
-                    <div>Unit: {item.unit}</div>
-                    {/* แสดงสถานะ */}
-                  </li>
-                ))
-              ) : (
-                <li className="text-white">No items found.</li>
-              )}
-            </ul>
-            <button
-              onClick={() => setShowPopup(false)}
-              className="mt-4 rounded bg-red-600 px-4 py-2 text-white"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+    <div className="w-1/2 rounded bg-gray-900 p-6">
+      <h2 className="mb-4 text-xl font-bold text-white">
+        Selected Items for Palette: {selectedPaletteId}
+      </h2>
+      <ul>
+        {selectedItems.length > 0 ? (
+          selectedItems.map((item) => (
+            <li key={item.id} className="mb-2 text-white">
+              <div>Name: {item.name}</div>
+              <div>Quantity: {item.quantity}</div>
+              <div>Unit: {item.unit}</div>
+            </li>
+          ))
+        ) : (
+          <li className="text-white">No items found.</li>
+        )}
+      </ul>
+      <button
+        onClick={() => setShowPopup(false)}
+        className="mt-4 rounded bg-red-600 px-4 py-2 text-white"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
