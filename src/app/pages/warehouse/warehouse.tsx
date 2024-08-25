@@ -14,7 +14,7 @@ export function Warehouse() {
 
     interface ShelfResult {
         id: number;
-        name : string | null;
+        name: string | null;
     }
 
     interface LocationWarehouseIdResult {
@@ -26,6 +26,18 @@ export function Warehouse() {
         shelves: ShelfResult[];
     }
 
+    interface SelectedItem {
+        id: number;
+        name: string | null;
+        group: string;
+        isShelf: boolean;
+    }
+
+    interface GridConfig {
+        rows: number;
+        cols: number;
+    }
+
     const [warehouseName, setWarehouseName] = useState('');
     // const [shelves, setShelves] = useState<ShelvesState>({});
 
@@ -33,16 +45,19 @@ export function Warehouse() {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
 
-    const [shelves, setShelves] = useState({});
-    const [reserves, setReserves] = useState({
+    const [shelves, setShelves] = useState<ShelvesState>({});
+    const [reserves, setReserves] = useState<{ [key: string]: ShelfResult[] }>({
         DockA: [{ id: 1, name: 'AA' }, { id: 2, name: 'AB' }],
-        DockB: [{ id: 3, name: 'BA' }, { id: 4, name: 'BB' }]
+       
     });
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
-    const [reserveGridConfig, setReserveGridConfig] = useState({ rows: 4, cols: 2 });
-    const shelfRefs = useRef({});
-    const reserveRefs = useRef({});
+
+    const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
+
+    const [shelfGridConfig, setShelfGridConfig] = useState<GridConfig>({ rows: 4, cols: 2 });
+    const [reserveGridConfig, setReserveGridConfig] = useState<GridConfig>({ rows: 4, cols: 2 });
+    const shelfRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const reserveRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
 
     const getWarehouseIdFromUrl = () => {
         const params = new URLSearchParams(location.search);
@@ -54,62 +69,61 @@ export function Warehouse() {
         fetchDataLocation(warehouseId);
     }, []);
 
-    const fetchDataLocation = async(warehouseId : number) => {
-        try{
+    const fetchDataLocation = async (warehouseId: number): Promise<void> => {
+        try {
             const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
-            const data=  await response.json();
+            const data: LocationWarehouseIdResult[] = await response.json();
             const newShelves: ShelvesState = {};
 
             data.forEach((location: LocationWarehouseIdResult) => {
-                console.log('Processing Location:', location);  
-                const key = `${location.locationId}-${location.locationName}`; 
-                newShelves[key] = location.shelves.map((shelf) => ({
-                    name: shelf.shelfName,
-                    id: shelf.shelfId,
+                const key = `${location.locationId}-${location.locationName}`;
+                newShelves[key] = location.shelves.map(shelf => ({
+                    name: shelf.name, // Ensure this matches the correct property from the data
+                    id: shelf.id // Ensure this matches the correct property from the data
                 }));
             });
 
-
-            console.log("check newshelves",newShelves)
             setShelves(newShelves);
-            setWarehouseName(data[0].warehouseName);
-
-        }catch(e){
+            if (data.length > 0) {
+                setWarehouseName(data[0].warehouseName);
+            }
+        } catch (e) {
             console.error(e);
         }
-    }
+    };
 
-
-    const handleItemClick = (item, groupName, isShelf) => {
+    const handleItemClick = (item: ShelfResult, groupName: string, isShelf: boolean) => {
         setSelectedItem({ ...item, group: groupName, isShelf });
     };
 
-    const addItem = (groupName, isShelf) => {
+
+    const addItem = (groupName: string, isShelf: boolean) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         if (isShelf) {
             setShelves(prevShelves => {
-                const newShelves = [...prevShelves[groupName]];
+                const newShelves = [...(prevShelves[groupName] || [])]; // Ensure type safety here
                 const maxItems = gridConfig.rows * gridConfig.cols;
                 if (newShelves.length < maxItems) {
                     const newId = newShelves.length + 1;
-                    const newShelf = { id: newId, name: `Shelf ${newId}` };
+                    const newShelf: ShelfResult = { id: newId, name: `Shelf ${newId}` };
                     newShelves.push(newShelf);
                 }
                 return { ...prevShelves, [groupName]: newShelves };
             });
         } else {
             setReserves(prevReserves => {
-                const newReserves = [...prevReserves[groupName]];
+                const newReserves = [...(prevReserves[groupName] || [])]; // Ensure type safety here
                 const maxItems = gridConfig.rows * gridConfig.cols;
                 if (newReserves.length < maxItems) {
                     const newId = newReserves.length + 1;
-                    const newReserve = { id: newId, name: `Palette ${newId}` };
+                    const newReserve: ShelfResult = { id: newId, name: `Palette ${newId}` };
                     newReserves.push(newReserve);
                 }
                 return { ...prevReserves, [groupName]: newReserves };
             });
         }
     };
+
 
     const generateNextGroupName = (existingGroups) => {
         const lastGroup = existingGroups[existingGroups.length - 1];
@@ -140,23 +154,24 @@ export function Warehouse() {
         }));
     };
 
-    const getGridClasses = (rows, cols) => {
+    const getGridClasses = (rows: number, cols: number): string => {
         const colClass = cols === 3 ? `grid-cols-${cols}` : 'grid-cols-4';
         const rowClass = rows <= 4 ? `grid-rows-${rows}` : 'grid-rows-4';
         return `${colClass} ${rowClass}`;
     };
+
 
     const getLocationId = (zoneName) => {
         const zoneLetter = zoneName.slice(-1);
         return alphabet.indexOf(zoneLetter) + 1;
     };
 
-    const renderGroup = (groupName, items, refMap, isShelf) => {
+    const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
-        const locationId = getLocationId(groupName);
+        const locationId = getLocationId(groupName)
 
         return (
-            <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => refMap.current[groupName] = el}>
+            <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => (refMap.current[groupName] = el)}>
                 <div className='flex'>
                     <div className={`${isDarkMode ? 'text-white' : 'text-black'} mr-1 text-white text-center`}>
                         {groupName}
@@ -210,12 +225,7 @@ export function Warehouse() {
             <div className='w-2/3'>
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
-                        <button onClick={() => router.push('/pages/Main')}
-                            className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
-                        >
-                            <ArrowLeftIcon className="w-6 h-6" />
-                        </button>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow}`}>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} mx-auto text-center text-2xl font-bold flex-grow}`}>
                             {warehouseName}
                         </h1>
                         <div className='flex items-center'>

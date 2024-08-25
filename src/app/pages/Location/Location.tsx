@@ -1,85 +1,106 @@
 "use client";
+import { useRouter } from 'next/navigation';
 import { useTheme } from '~/app/_context/Theme';
-import { useState, useRef } from "react";
-import Link from 'next/link';
-import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useRef, ChangeEvent } from "react";
+import { PlusCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { Popup } from 'src/app/_components/Popup';
+
+// Define types for shelves and reserves
+interface Shelf {
+    id: number;
+    name: string;
+    groupId: number;
+    palettes?: Palette[];
+}
+
+interface Palette {
+    id: number;
+    name: string;
+}
+
+interface GridConfig {
+    rows: number;
+    cols: number;
+}
+
+interface PopupContent extends Palette {
+    group: number;
+}
 
 export function Location() {
     const { isDarkMode } = useTheme();
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
-    const params = new URLSearchParams(window.location.search);
-    const warehouseId = params.get('warehouseId');
-    const locationId = params.get('id');
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+    const [popupContent, setPopupContent] = useState<PopupContent | null>(null);
 
-    const [shelves, setShelves] = useState({
-        GroupShelfA: [{ id: 1, name: 'Shelf 1' }, { id: 2, name: 'Shelf 2' }],
-        GroupShelfB: [{ id: 3, name: 'Shelf 3' }, { id: 4, name: 'Shelf 4' }]
+    const [shelves, setShelves] = useState<Record<number, Shelf[]>>({
+        1: [{ id: 1, name: 'Shelf 1', groupId: 1 }, { id: 2, name: 'Shelf 2', groupId: 1 }],
+        2: [{ id: 1, name: 'Shelf 1', groupId: 2 }, { id: 2, name: 'Shelf 2', groupId: 2 }]
     });
-    const [reserves, setReserves] = useState({
-        GroupAA: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
-        GroupAB: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
+    const [reserves, setReserves] = useState<Record<number, Palette[]>>({
+        1: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }],
+        2: [{ id: 1, name: 'Palette 1' }, { id: 2, name: 'Palette 2' }]
     });
 
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [shelfGridConfig, setShelfGridConfig] = useState({ rows: 4, cols: 2 });
-    const [reserveGridConfig, setReserveGridConfig] = useState({ rows: 4, cols: 2 });
-    const shelfRefs = useRef({});
-    const reserveRefs = useRef({});
+    const [selectedItem, setSelectedItem] = useState<Shelf | Palette | null>(null);
+    const [shelfGridConfig, setShelfGridConfig] = useState<GridConfig>({ rows: 4, cols: 2 });
+    const [reserveGridConfig, setReserveGridConfig] = useState<GridConfig>({ rows: 4, cols: 2 });
+    const [selectedShelf, setSelectedShelf] = useState<{ groupId: number; id: number } | null>(null);
+    const shelfRefs = useRef<Record<number, HTMLDivElement | null>>({});
+    const reserveRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-    const handleItemClick = (item, groupName, isShelf) => {
-        setSelectedItem({ ...item, group: groupName, isShelf });
+    const handleItemClick = (item: Shelf | Palette, groupId: number, isShelf: boolean) => {
+        if (isShelf) {
+            router.push(`/pages/Shelf?groupId=${groupId}&shelfId=${item.id}`);
+        } else {
+            setPopupContent({ ...item as Palette, group: groupId });
+            setIsPopupOpen(true);
+        }
     };
 
-    const addItem = (groupName, isShelf) => {
+    const handleShelfClickInPopup = (groupId: number, shelf: Shelf) => {
+        setSelectedShelf({ groupId, id: shelf.id });
+    };
+
+    const addItem = (groupId: number, isShelf: boolean) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         if (isShelf) {
             setShelves(prevShelves => {
-                const newShelves = [...prevShelves[groupName]];
+                const newShelves = [...(prevShelves[groupId] || [])];
                 const maxItems = gridConfig.rows * gridConfig.cols;
                 if (newShelves.length < maxItems) {
                     const newId = newShelves.length + 1;
-                    const newShelf = { id: newId, name: `Shelf ${newId}` };
+                    const newShelf: Shelf = { id: newId, name: `Shelf ${newId}`, groupId };
                     newShelves.push(newShelf);
                 }
-                return { ...prevShelves, [groupName]: newShelves };
+                return { ...prevShelves, [groupId]: newShelves };
             });
         } else {
             setReserves(prevReserves => {
-                const newReserves = [...prevReserves[groupName]];
+                const newReserves = [...(prevReserves[groupId] || [])];
                 const maxItems = gridConfig.rows * gridConfig.cols;
                 if (newReserves.length < maxItems) {
                     const newId = newReserves.length + 1;
-                    const newReserve = { id: newId, name: `Palette ${newId}` };
+                    const newReserve: Palette = { id: newId, name: `Palette ${newId}` };
                     newReserves.push(newReserve);
                 }
-                return { ...prevReserves, [groupName]: newReserves };
+                return { ...prevReserves, [groupId]: newReserves };
             });
         }
     };
 
-    const generateNextGroupName = (isShelf) => {
-        const existingGroups = Object.keys(isShelf ? shelves : reserves);
-        const lastGroup = existingGroups[existingGroups.length - 1];
-        const groupPrefix = lastGroup.slice(0, -1);
-        const lastChar = lastGroup.slice(-1);
-        const nextChar = alphabet[(alphabet.indexOf(lastChar) + 1) % alphabet.length];
-
-        if (nextChar === 'A' && lastChar === 'Z') {
-            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.slice(-1)) + 1];
-            return `Group${nextPrefix}A`;
-        } else {
-            return `${groupPrefix}${nextChar}`;
-        }
+    const generateNextGroupId = (isShelf: boolean): number => {
+        const existingGroups = Object.keys(isShelf ? shelves : reserves).map(Number);
+        const lastGroup = Math.max(...existingGroups, 0);
+        return lastGroup + 1;
     };
 
-    const addGroup = (isShelf) => {
-        const newGroupName = generateNextGroupName(isShelf);
+    const addGroup = (isShelf: boolean) => {
+        const newGroupName = generateNextGroupId(isShelf);
         if (isShelf) {
             setShelves(prevShelves => ({
                 ...prevShelves,
-                [newGroupName]: [{ id: 1, name: 'Shelf 1' }]
+                [newGroupName]: [{ id: 1, name: 'Shelf 1', groupId: newGroupName }]
             }));
         } else {
             setReserves(prevReserves => ({
@@ -89,85 +110,132 @@ export function Location() {
         }
     };
 
-    const getGridClasses = (rows, cols) => {
-        const colClass = cols === 3 ? `grid-cols-${cols}` : 'grid-cols-4';
+    const getGridClasses = (rows: number, cols: number): string => {
+        const colClass = cols === 4 ? `grid-cols-${cols}` : 'grid-cols-4';
         const rowClass = rows <= 4 ? `grid-rows-${rows}` : 'grid-rows-4';
         return `${colClass} ${rowClass}`;
     };
 
-    const getGridClass = (rows, cols) => {
-        let colClass;
-            colClass = `grid-cols-3`;
-        const rowClass = rows <= 4 ? `grid-rows-${rows}` : `grid-rows-4`;
-        return `${colClass} ${rowClass}`;
+    const handleMovePalette = () => {
+        if (!selectedShelf || !popupContent) return;
+
+        const { groupId, id } = selectedShelf;
+
+        setShelves(prevShelves => {
+            const updatedShelves = { ...prevShelves };
+            const targetShelf = updatedShelves[groupId]?.find(shelf => shelf.id === id);
+            if (!targetShelf) return updatedShelves;
+
+            targetShelf.palettes = targetShelf.palettes || [];
+            targetShelf.palettes.push(popupContent);
+
+            return updatedShelves;
+        });
+
+        setReserves(prevReserves => {
+            const updatedReserves = { ...prevReserves };
+            if (popupContent?.group in updatedReserves) {
+                updatedReserves[popupContent.group] = updatedReserves[popupContent.group].filter(palette => palette.id !== popupContent.id);
+            }
+            return updatedReserves;
+        });
+
+        setIsPopupOpen(false);
+        setPopupContent(null);
+        setSelectedShelf(null);
     };
 
-    const renderGroup = (groupName, items, refMap, isShelf) => {
-        const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
-        return (
-            <div className="flex flex-col items-center mb-8" ref={el => refMap.current[groupName] = el} key={groupName}>
-                <div className="w-full h-full bg-zinc-800">
-                    <div className={`grid ${getGridClasses(gridConfig.rows, gridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
-                        {items.map(item => (
-                            <Link key={item.id} href={`/pages/Shelf?id=${item.id}`}>
+    const renderShelvesGroup = () => {
+        return Object.keys(shelves).map(groupId => {
+            const groupIdNumber = Number(groupId);
+            const items = shelves[groupIdNumber] || [];
+            return (
+                <div key={groupIdNumber} className="flex flex-col items-center mb-8" ref={(el) => { if (el) shelfRefs.current[groupIdNumber] = el; }}>
+                    <div className="w-full h-full bg-zinc-800">
+                        <div className={`grid ${getGridClasses(shelfGridConfig.rows, shelfGridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
+                            {items.map(item => (
                                 <div
-                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id ? 'bg-green-500' : ''}`}
-                                    onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
+                                    key={item.id}
+                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id ? 'bg-green-500' : ''} ${selectedShelf && selectedShelf.id === item.id && 'bg-blue-500'}`}
+                                    onClick={() => handleItemClick(item, groupIdNumber, true)}
                                 >
                                     {item.name}
                                 </div>
-                            </Link>
-                        ))}
-                        {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
-                            <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
-                                {/* Empty slot */}
-                            </div>
-                        ))}
+                            ))}
+                            {Array.from({ length: shelfGridConfig.rows * shelfGridConfig.cols - items.length }, (_, index) => (
+                                <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
+                                    {/* Empty slot */}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className='flex'>
+                        <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2.5 mr-1 text-center`}>
+                            Group Shelf {groupIdNumber}
+                        </div>
+                        <button
+                            onClick={() => addItem(groupIdNumber, true)}
+                            className={`mt-2 p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
-                <div className='flex'>
-                    <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2.5 mr-1 text-center`}>
-                        {groupName}
-                    </div>
-                    <button
-                        onClick={() => addItem(groupName, isShelf)}
-                        className={`mt-2 p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
-                    >
-                        <PlusIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-        );
+            );
+        });
     };
 
-    const renderReservesGroup = () => (
-        <div className="mt-2 grid">
-            <div className={`grid grid-cols-1 gap-4`}>
-                {Object.keys(reserves).map(reserveName =>
-                    renderGroup(reserveName, reserves[reserveName], reserveRefs, false)
-                )}
-            </div>
-        </div>
-    );
+    const renderReservesGroup = () => {
+        return Object.keys(reserves).map(groupId => {
+            const groupIdNumber = Number(groupId);
+            const items = reserves[groupIdNumber] || [];
+            return (
+                <div key={groupIdNumber} className="flex flex-col items-center mb-8" ref={(el) => { if (el) reserveRefs.current[groupIdNumber] = el; }}>
+                    <div className="w-full h-full bg-zinc-800">
+                        <div className={`grid ${getGridClasses(reserveGridConfig.rows, reserveGridConfig.cols)} gap-2 w-full h-full border-2 border-dashed border-gray-300 p-2`}>
+                            {items.map(item => (
+                                <div
+                                    key={item.id}
+                                    className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id ? 'bg-green-500' : ''}`}
+                                    onClick={() => handleItemClick(item, groupIdNumber, false)}
+                                >
+                                    {item.name}
+                                </div>
+                            ))}
+                            {Array.from({ length: reserveGridConfig.rows * reserveGridConfig.cols - items.length }, (_, index) => (
+                                <div key={`empty-${index}`} className="w-full h-full flex items-center justify-center border border-dashed border-gray-300">
+                                    {/* Empty slot */}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className='flex'>
+                        <div className={`${isDarkMode ? 'text-white' : 'text-black'} mt-2.5 mr-1 text-center`}>
+                            Group Dock {groupIdNumber}
+                        </div>
+                        <button
+                            onClick={() => addItem(groupIdNumber, false)}
+                            className={`mt-2 p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            );
+        });
+    };
 
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
             <div className='w-2/3'>
-                <div className="relative flex flex-col">
-                    <div className='flex items-center justify-between w-full mt-6 mb-4'>
-                        
-                            <button onClick={() => router.push(`/pages/Warehouse?id=${warehouseId}`)}
-                                className={`p-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-white rounded-full ml-8 flex items-center justify-center`}
-                            >
-                                <ArrowLeftIcon className="w-6 h-6" />
-                            </button>
-                        
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Location Zone {locationId}</h1>
+                <div className='items-center relative flex flex-col'>
+                    <div className='flex items-center justify-between w-full mt-6 mb-2'>
+                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center text-2xl font-bold flex-grow`}>Zone</h1>
                         <div className='flex items-center'>
                             <input
                                 type="number"
                                 value={shelfGridConfig.rows}
-                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, rows: parseInt(e.target.value) })}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setShelfGridConfig({ ...shelfGridConfig, rows: parseInt(e.target.value, 10) })}
                                 placeholder="Rows"
                                 className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
                                 min={1}
@@ -175,7 +243,7 @@ export function Location() {
                             <input
                                 type="number"
                                 value={shelfGridConfig.cols}
-                                onChange={(e) => setShelfGridConfig({ ...shelfGridConfig, cols: parseInt(e.target.value) })}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setShelfGridConfig({ ...shelfGridConfig, cols: parseInt(e.target.value, 10) })}
                                 placeholder="Cols"
                                 className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
                                 min={1}
@@ -188,10 +256,8 @@ export function Location() {
                             </button>
                         </div>
                     </div>
-                    <div className="mt-2">
-                        <div className={`grid ${getGridClass(shelfGridConfig.rows, shelfGridConfig.cols)} gap-4`}>
-                            {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true))}
-                        </div>
+                    <div className="mt-2 grid grid-cols-4 gap-x-4 px-4">
+                        {renderShelvesGroup()}
                     </div>
                 </div>
             </div>
@@ -204,7 +270,7 @@ export function Location() {
                             <input
                                 type="number"
                                 value={reserveGridConfig.rows}
-                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value) })}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value, 10) })}
                                 placeholder="Rows"
                                 className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
                                 min={1}
@@ -212,7 +278,7 @@ export function Location() {
                             <input
                                 type="number"
                                 value={reserveGridConfig.cols}
-                                onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value) })}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value, 10) })}
                                 placeholder="Cols"
                                 className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
                                 min={1}
@@ -230,6 +296,71 @@ export function Location() {
                     </div>
                 </div>
             </div>
+
+            <Popup
+                isOpen={isPopupOpen}
+                onClose={() => setIsPopupOpen(false)}
+                content={
+                    popupContent ? (
+                        <div className='w-full'>
+                            <h2 className="text-lg font-bold">{popupContent.name}</h2>
+                            <p>Group: {popupContent.group}</p>
+                            <div className='flex items-center justify-between'>
+                                <div className='flex-grow'>
+                                    <p>ID: {popupContent.id}</p>
+                                </div>
+                                <div className='ml-4'>
+                                    <input
+                                        type="checkbox"
+                                        id="react-option"
+                                        value=""
+                                        className="hidden peer"
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="react-option"
+                                        className="inline-flex items-center justify-between px-2 py-0.5 text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer 
+                                        peer-checked:bg-green-400 peer-checked:border-green-500 peer-checked:text-white dark:peer-checked:bg-green-300 dark:peer-checked:text-white 
+                                        hover:text-gray-600 dark:hover:text-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700
+                                        before:content-['Suggestion_Off'] peer-checked:before:content-['Suggestion_On'] duration-300"
+                                    >
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mt-2 overflow-y-auto h-96">
+                                <div className="grid grid-cols-5 gap-x-12 gap-y-8 mt-2 px-4">
+                                    {Object.keys(shelves).map(groupId => (
+                                        <div key={groupId} className="mt-2">
+                                            <h3 className="font-bold mb-2">Group Shelf {groupId}</h3>
+                                            <div className="grid grid-cols-8 gap-2">
+                                                {shelves[Number(groupId)].map(shelf => (
+                                                    <div
+                                                        key={shelf.id}
+                                                        onClick={() => handleShelfClickInPopup(Number(groupId), shelf)}
+                                                        className={`p-1 col-span-4 text-sm border rounded cursor-pointer ${selectedShelf && selectedShelf.id === shelf.id ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+                                                    >
+                                                        {shelf.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    onClick={handleMovePalette}
+                                    className="bg-green-500 text-white p-2 rounded"
+                                >
+                                    Okay
+                                </button>
+                            </div>
+                        </div>
+                    ) : null
+                }
+            />
         </div>
     );
 }
