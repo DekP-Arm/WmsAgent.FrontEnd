@@ -44,11 +44,15 @@ export function Warehouse() {
     const { isDarkMode } = useTheme();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const router = useRouter();
+    const [showDockNameInput, setShowDockNameInput] = useState(false);
+    const [showLocationNameInput, setShowLocationNameInput] = useState(false);
+    const [dockName, setDockName] = useState('');
+    const [locationName, setLocationName] = useState('');
 
     const [shelves, setShelves] = useState<ShelvesState>({});
     const [reserves, setReserves] = useState<{ [key: string]: ShelfResult[] }>({
         DockA: [{ id: 1, name: 'AA' }, { id: 2, name: 'AB' }],
-       
+
     });
 
     const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
@@ -74,12 +78,14 @@ export function Warehouse() {
             const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
             const data: LocationWarehouseIdResult[] = await response.json();
             const newShelves: ShelvesState = {};
-
+            console.log(data);
+            
             data.forEach((location: LocationWarehouseIdResult) => {
                 const key = `${location.locationId}-${location.locationName}`;
                 newShelves[key] = location.shelves.map(shelf => ({
-                    name: shelf.name, // Ensure this matches the correct property from the data
-                    id: shelf.id // Ensure this matches the correct property from the data
+                    name: shelf.shelfName, // Ensure this matches the correct property from the data
+                    id: shelf.shelfId
+                    // Ensure this matches the correct property from the data
                 }));
             });
 
@@ -98,30 +104,8 @@ export function Warehouse() {
 
 
     const addItem = (groupName: string, isShelf: boolean) => {
-        const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
-        if (isShelf) {
-            setShelves(prevShelves => {
-                const newShelves = [...(prevShelves[groupName] || [])]; // Ensure type safety here
-                const maxItems = gridConfig.rows * gridConfig.cols;
-                if (newShelves.length < maxItems) {
-                    const newId = newShelves.length + 1;
-                    const newShelf: ShelfResult = { id: newId, name: `Shelf ${newId}` };
-                    newShelves.push(newShelf);
-                }
-                return { ...prevShelves, [groupName]: newShelves };
-            });
-        } else {
-            setReserves(prevReserves => {
-                const newReserves = [...(prevReserves[groupName] || [])]; // Ensure type safety here
-                const maxItems = gridConfig.rows * gridConfig.cols;
-                if (newReserves.length < maxItems) {
-                    const newId = newReserves.length + 1;
-                    const newReserve: ShelfResult = { id: newId, name: `Palette ${newId}` };
-                    newReserves.push(newReserve);
-                }
-                return { ...prevReserves, [groupName]: newReserves };
-            });
-        }
+        console.log(groupName);
+        setShowLocationNameInput(true);
     };
 
 
@@ -132,7 +116,7 @@ export function Warehouse() {
         const nextChar = alphabet[(alphabet.indexOf(lastChar) + 1) % alphabet.length];
 
         if (nextChar === 'A' && lastChar === 'Z') {
-            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.slice(-1)) + 1];
+            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.sl  ice(-1)) + 1];
             return `${groupPrefix.slice(0, -1)}${nextPrefix}A`;
         } else {
             return `${groupPrefix}${nextChar}`;
@@ -140,18 +124,7 @@ export function Warehouse() {
     };
 
     const addGroup = () => {
-        const newZoneName = generateNextGroupName(Object.keys(shelves));
-        const newDocumentName = newZoneName.replace('Zone', 'Dock');
-
-        setShelves(prevShelves => ({
-            ...prevShelves,
-            [newZoneName]: [{ id: 1, name: 'Shelf 1' }]
-        }));
-
-        setReserves(prevReserves => ({
-            ...prevReserves,
-            [newDocumentName]: [{ id: 1, name: 'Palette 1' }]
-        }));
+        setShowDockNameInput(true);
     };
 
     const getGridClasses = (rows: number, cols: number): string => {
@@ -165,6 +138,24 @@ export function Warehouse() {
         const zoneLetter = zoneName.slice(-1);
         return alphabet.indexOf(zoneLetter) + 1;
     };
+
+    const saveLocationName = (groupName: string, isShelf: boolean) => {
+        console.log('Saved Dock Name:', locationName);
+        const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
+            setShelves(prevShelves => {
+                const newShelves = [...(prevShelves[groupName] || [])]; // Ensure type safety here
+                const maxItems = gridConfig.rows * gridConfig.cols;
+                if (newShelves.length < maxItems) {
+                    const newId = newShelves.length + 1;
+                    const newShelf: ShelfResult = { id: newId, name: locationName };
+                    newShelves.push(newShelf);
+                }
+                return { ...prevShelves, [groupName]: newShelves };
+            });
+        setShowDockNameInput(false); 
+        setLocationName(''); 
+    };
+
 
     const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
@@ -183,6 +174,36 @@ export function Warehouse() {
                         <PlusIcon className="w-5 h-5" />
                     </button>
                 </div>
+                {showLocationNameInput && (
+                                <div className=" ml-4">
+                                    <label htmlFor="dockname" className="block text-sm font-medium text-gray-700">
+                                        Location Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="dockname"
+                                        name="dockname"
+                                        value={locationName}
+                                        onChange={(e) => setLocationName(e.target.value)}
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                                        placeholder="Enter dock name"
+                                    />
+                                    <div className='flex'>
+                                    <button
+                                        onClick={() => saveLocationName(groupName,isShelf)}
+                                        className={`p-2 m-2 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={CloseDockName}
+                                        className={`p-2 m-2 ${isDarkMode ? 'bg-red-600' : 'bg-red-500'} text-white rounded-full flex items-center justify-center`}
+                                    >
+                                        Close
+                                    </button>
+                                    </div>
+                                </div>
+                            )}
                 <div
                     className="w-full h-full mt-2 cursor-pointer"
                     onClick={() => router.push(`/pages/Location?id=${locationId}`)}
@@ -194,7 +215,7 @@ export function Warehouse() {
                                 className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-700 text-white' : 'bg-zinc-700 text-white'} border-2 ${isDarkMode ? 'border-zinc-500' : 'border-zinc-600'} p-1 text-sm cursor-pointer ${selectedItem && selectedItem.id === item.id && 'bg-green-500'}`}
                                 onClick={() => handleItemClick({ id: item.id, name: item.name }, groupName, isShelf)}
                             >
-                                Group {item.name}
+                                {item.name}
                             </div>
                         ))}
                         {Array.from({ length: gridConfig.rows * gridConfig.cols - items.length }, (_, index) => (
@@ -219,10 +240,28 @@ export function Warehouse() {
         );
     };
 
+    const saveDockName = () => {
+        console.log('Saved Dock Name:', dockName);
+        const newZoneName = dockName;
 
+        if (newZoneName){
+            setShelves(prevShelves => ({
+                ...prevShelves,
+                [newZoneName]: []
+            }));
+        }
+        setShowDockNameInput(false); 
+        setDockName(''); 
+    };
+
+    const CloseDockName = () => {
+        setShowLocationNameInput(false);
+        setShowDockNameInput(false); 
+        setDockName('');
+    };
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
-            <div className='w-2/3'>
+            <div className='w-2/3 ml-10'>
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} mx-auto text-center text-2xl font-bold flex-grow}`}>
@@ -252,8 +291,38 @@ export function Warehouse() {
                             >
                                 <PlusCircleIcon className="w-6 h-6" />
                             </button>
+                            {showDockNameInput && (
+                                <div className=" ml-4">
+                                    <label htmlFor="dockname" className="block text-sm font-medium text-gray-700">
+                                        Dock Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="dockname"
+                                        name="dockname"
+                                        value={dockName}
+                                        onChange={(e) => setDockName(e.target.value)}
+                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                                        placeholder="Enter dock name"
+                                    />
+                                    <div className='flex'>
+                                    <button
+                                        onClick={saveDockName}
+                                        className={`p-2 m-2 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={CloseDockName}
+                                        className={`p-2 m-2 ${isDarkMode ? 'bg-red-600' : 'bg-red-500'} text-white rounded-full flex items-center justify-center`}
+                                    >
+                                        Close
+                                    </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    </div>  
                     <div className="mt-2">
                         <div className={`grid grid-cols-1 gap-4`}>
                             {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true))}
@@ -262,32 +331,6 @@ export function Warehouse() {
                 </div>
             </div>
 
-            <div className='w-1/3'>
-                <div className='items-center relative flex flex-col'>
-                    <div className='flex items-center justify-between w-full mt-6 mb-2'>
-                        <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center mx-auto text-2xl font-bold flex-grow}`}>Dock</h1>
-                        <input
-                            type="number"
-                            value={reserveGridConfig.rows}
-                            onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, rows: parseInt(e.target.value) })}
-                            placeholder="Rows"
-                            className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                            min={1}
-                        />
-                        <input
-                            type="number"
-                            value={reserveGridConfig.cols}
-                            onChange={(e) => setReserveGridConfig({ ...reserveGridConfig, cols: parseInt(e.target.value) })}
-                            placeholder="Cols"
-                            className={`p-1 w-10 border ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} rounded mr-2`}
-                            min={1}
-                        />
-                    </div>
-                    <div className='mt-3.5'>
-                        {renderReservesGroup()}
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }
