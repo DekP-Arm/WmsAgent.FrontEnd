@@ -61,7 +61,8 @@ export function Warehouse() {
     const [reserveGridConfig, setReserveGridConfig] = useState<GridConfig>({ rows: 4, cols: 2 });
     const shelfRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const reserveRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
+    const [activeGroup, setActiveGroup] = useState<string | null>(null);
+    const [isShelfActive, setIsShelfActive] = useState<boolean | null>(null);
 
     const getWarehouseIdFromUrl = () => {
         const params = new URLSearchParams(location.search);
@@ -105,6 +106,8 @@ export function Warehouse() {
 
     const addItem = (groupName: string, isShelf: boolean) => {
         console.log(groupName);
+        setActiveGroup(groupName);
+        setIsShelfActive(isShelf);
         setShowLocationNameInput(true);
     };
 
@@ -116,7 +119,7 @@ export function Warehouse() {
         const nextChar = alphabet[(alphabet.indexOf(lastChar) + 1) % alphabet.length];
 
         if (nextChar === 'A' && lastChar === 'Z') {
-            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.sl  ice(-1)) + 1];
+            const nextPrefix = alphabet[alphabet.indexOf(groupPrefix.slice(-1)) + 1];
             return `${groupPrefix.slice(0, -1)}${nextPrefix}A`;
         } else {
             return `${groupPrefix}${nextChar}`;
@@ -156,6 +159,28 @@ export function Warehouse() {
         setLocationName(''); 
     };
 
+    const saveDockName = () => {
+        console.log('Saved Dock Name:', dockName);
+        const newZoneName = dockName;
+
+        if (newZoneName){
+            setShelves(prevShelves => ({
+                ...prevShelves,
+                [newZoneName]: []
+            }));
+        }
+        setShowDockNameInput(false); 
+        setDockName(''); 
+    };
+
+    const CloseDockName = () => {
+        setActiveGroup(null);
+        setIsShelfActive(null);
+        setShowLocationNameInput(false);
+        setShowDockNameInput(false); 
+        setDockName('');
+    };
+
 
     const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
@@ -174,7 +199,7 @@ export function Warehouse() {
                         <PlusIcon className="w-5 h-5" />
                     </button>
                 </div>
-                {showLocationNameInput && (
+                { activeGroup === groupName && isShelfActive === isShelf && showLocationNameInput && (
                                 <div className=" ml-4">
                                     <label htmlFor="dockname" className="block text-sm font-medium text-gray-700">
                                         Location Name
@@ -240,25 +265,6 @@ export function Warehouse() {
         );
     };
 
-    const saveDockName = () => {
-        console.log('Saved Dock Name:', dockName);
-        const newZoneName = dockName;
-
-        if (newZoneName){
-            setShelves(prevShelves => ({
-                ...prevShelves,
-                [newZoneName]: []
-            }));
-        }
-        setShowDockNameInput(false); 
-        setDockName(''); 
-    };
-
-    const CloseDockName = () => {
-        setShowLocationNameInput(false);
-        setShowDockNameInput(false); 
-        setDockName('');
-    };
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
             <div className='w-2/3 ml-10'>
