@@ -104,8 +104,8 @@ export function Warehouse() {
     };
 
 
-    const addItem = (groupName: string, isShelf: boolean) => {
-        console.log(groupName);
+    const addItem = (groupName: string, isShelf: boolean, id: number) => {
+        console.log("id",groupName);
         setActiveGroup(groupName);
         setIsShelfActive(isShelf);
         setShowLocationNameInput(true);
@@ -143,8 +143,15 @@ export function Warehouse() {
     };
 
     const saveLocationName = (groupName: string, isShelf: boolean) => {
-        console.log('Saved Dock Name:', locationName);
+
+        //ข้อมูลในการ add location => dockid, location name, type = null ไว้ก่อน
+        const DokcId = groupName.split('-')[0];
+        console.log('locationId',DokcId);
+        console.log('Saved location Name:', locationName);
+
+
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
+        if (locationName){
             setShelves(prevShelves => {
                 const newShelves = [...(prevShelves[groupName] || [])]; // Ensure type safety here
                 const maxItems = gridConfig.rows * gridConfig.cols;
@@ -155,14 +162,17 @@ export function Warehouse() {
                 }
                 return { ...prevShelves, [groupName]: newShelves };
             });
+        }
         setShowDockNameInput(false); 
         setLocationName(''); 
     };
 
     const saveDockName = () => {
+
+        // ข้อมูลในการสร้าง dock => dockname, warehouseid
         console.log('Saved Dock Name:', dockName);
         const newZoneName = dockName;
-
+            
         if (newZoneName){
             setShelves(prevShelves => ({
                 ...prevShelves,
@@ -182,7 +192,7 @@ export function Warehouse() {
     };
 
 
-    const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean) => {
+    const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean, id: number) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         const locationId = getLocationId(groupName)
 
@@ -193,7 +203,7 @@ export function Warehouse() {
                         {groupName}
                     </div>
                     <button
-                        onClick={() => addItem(groupName, isShelf)}
+                        onClick={() => addItem(groupName, isShelf,locationId)}
                         className={`p-1 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white rounded-full flex items-center justify-center`}
                     >
                         <PlusIcon className="w-5 h-5" />
@@ -331,7 +341,7 @@ export function Warehouse() {
                     </div>  
                     <div className="mt-2">
                         <div className={`grid grid-cols-1 gap-4`}>
-                            {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true))}
+                            {Object.keys(shelves).map(shelfName => renderGroup(shelfName, shelves[shelfName], shelfRefs, true,shelfName.id))}
                         </div>
                     </div>
                 </div>
