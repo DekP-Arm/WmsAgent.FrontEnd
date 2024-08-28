@@ -2,7 +2,7 @@
 import { useTheme } from '~/app/_context/Theme';
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PlusCircleIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { PlusCircleIcon, PlusIcon, ArrowLeftIcon, MinusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import axios from 'axios'; // Ensure axios is installed
 
@@ -112,6 +112,18 @@ export function Warehouse() {
     };
 
 
+    const deleteItem = (groupName: string, isShelf: boolean, id: number) => {
+        console.log("id",groupName);
+        const dockId  = groupName.split('-')[0];
+        const isConfirmed = window.confirm(`คุณได้ทำการลบ dock: ${groupName}. คุณต้องการลบใช่หรือไม่?`);
+
+        if (isConfirmed) {
+            console.log(`Item with ID: ${id} ถูกลบออกจาก ${dockId}`);
+            window.location.reload();
+        }
+    };
+
+
     const generateNextGroupName = (existingGroups) => {
         const lastGroup = existingGroups[existingGroups.length - 1];
         const groupPrefix = lastGroup.slice(0, -1);
@@ -169,9 +181,13 @@ export function Warehouse() {
 
     const saveDockName = () => {
 
+        // ขอ lasted id ของ dock มาด้วยจะ gen id ตัวล่าสุด
+
         // ข้อมูลในการสร้าง dock => dockname, warehouseid
         console.log('Saved Dock Name:', dockName);
         const newZoneName = dockName;
+        // const lastedId = '10';
+        // const newZoneName =lastedId + ' - '  +dockName;
             
         if (newZoneName){
             setShelves(prevShelves => ({
@@ -179,6 +195,7 @@ export function Warehouse() {
                 [newZoneName]: []
             }));
         }
+
         setShowDockNameInput(false); 
         setDockName(''); 
     };
@@ -208,6 +225,13 @@ export function Warehouse() {
                     >
                         <PlusIcon className="w-5 h-5" />
                     </button>
+                    <button
+                        onClick={() => deleteItem(groupName, isShelf,locationId)}
+                        className={`p-1 ${isDarkMode ? 'bg-red-600' : 'bg-red-500'} text-white rounded-full flex items-center justify-center ml-auto`}
+                    >
+                        <MinusIcon className="w-5 h-5 ml" />
+                    </button>
+                    
                 </div>
                 { activeGroup === groupName && isShelfActive === isShelf && showLocationNameInput && (
                                 <div className=" ml-4">
