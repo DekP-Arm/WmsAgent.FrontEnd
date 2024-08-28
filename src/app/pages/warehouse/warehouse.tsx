@@ -48,7 +48,7 @@ export function Warehouse() {
     const [shelves, setShelves] = useState<ShelvesState>({});
     const [reserves, setReserves] = useState<{ [key: string]: ShelfResult[] }>({
         DockA: [{ id: 1, name: 'AA' }, { id: 2, name: 'AB' }],
-       
+
     });
 
     const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
@@ -65,32 +65,45 @@ export function Warehouse() {
     };
 
     useEffect(() => {
-        const warehouseId = getWarehouseIdFromUrl(); // ดึง warehouseId จาก URL
+        const warehouseId = getWarehouseIdFromUrl(); 
         fetchDataLocation(warehouseId);
-    }, []);
+    }, [router]);  // Include router if it impacts fetching
+    
+
+    // const fetchDataLocation = async (warehouseId: number): Promise<void> => {
+    //     try {
+    //         const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
+    //         const data: LocationWarehouseIdResult[] = await response.json();
+    //         const newShelves: ShelvesState = {};
+
+    //         data.forEach((location: LocationWarehouseIdResult) => {
+    //             const key = `${location.locationId}-${location.locationName}`;
+    //             newShelves[key] = location.shelves.map(shelf => ({
+    //                 name: shelf.name, // Ensure this matches the correct property from the data
+    //                 id: shelf.id // Ensure this matches the correct property from the data
+    //             }));
+    //         });
+
+    //         setShelves(newShelves);
+    //         if (data.length > 0) {
+    //             setWarehouseName(data[0].warehouseName);
+    //         }
+    //     } catch (e) {
+    //         console.error(e);
+    //     }
+    // };
 
     const fetchDataLocation = async (warehouseId: number): Promise<void> => {
         try {
             const response = await fetch(`http://localhost:5012/api/Location/GetLocationByWarehouseId/${warehouseId}`);
-            const data: LocationWarehouseIdResult[] = await response.json();
-            const newShelves: ShelvesState = {};
-
-            data.forEach((location: LocationWarehouseIdResult) => {
-                const key = `${location.locationId}-${location.locationName}`;
-                newShelves[key] = location.shelves.map(shelf => ({
-                    name: shelf.name, // Ensure this matches the correct property from the data
-                    id: shelf.id // Ensure this matches the correct property from the data
-                }));
-            });
-
-            setShelves(newShelves);
-            if (data.length > 0) {
-                setWarehouseName(data[0].warehouseName);
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            // Process data
         } catch (e) {
-            console.error(e);
+            console.error('Error fetching data:', e);
         }
     };
+    
 
     const handleItemClick = (item: ShelfResult, groupName: string, isShelf: boolean) => {
         setSelectedItem({ ...item, group: groupName, isShelf });
@@ -171,7 +184,7 @@ export function Warehouse() {
         const locationId = getLocationId(groupName)
 
         return (
-            <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => (refMap.current[groupName] = el)}>
+            <div className="flex flex-col mb-8 mx-5 bg-zinc-800 p-4 pb-8" ref={el => (refMap.current[groupName] = el)}>
                 <div className='flex'>
                     <div className={`${isDarkMode ? 'text-white' : 'text-black'} mr-1 text-white text-center`}>
                         {groupName}
@@ -222,13 +235,16 @@ export function Warehouse() {
 
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
-            <div className='w-2/3'>
+            <div className='w-full'>
                 <div className="relative flex flex-col">
                     <div className='flex items-center justify-between w-full mt-6 mb-4'>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} mx-auto text-center text-2xl font-bold flex-grow}`}>
                             {warehouseName}
                         </h1>
                         <div className='flex items-center'>
+                            <div>
+                                <input type="text" id="first_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-20 mr-2 p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Docks Name" required />
+                            </div>
                             <input
                                 type="number"
                                 value={shelfGridConfig.rows}
@@ -262,7 +278,7 @@ export function Warehouse() {
                 </div>
             </div>
 
-            <div className='w-1/3'>
+            {/* <div className='w-1/3'>
                 <div className='items-center relative flex flex-col'>
                     <div className='flex items-center justify-between w-full mt-6 mb-2'>
                         <h1 className={`${isDarkMode ? 'text-white' : 'text-black'} text-center mx-auto text-2xl font-bold flex-grow}`}>Dock</h1>
@@ -287,7 +303,7 @@ export function Warehouse() {
                         {renderReservesGroup()}
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
