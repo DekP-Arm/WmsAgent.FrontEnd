@@ -273,7 +273,9 @@ export function Warehouse() {
                         onClick={() => openEdit(groupName)}
                         className={`p-1 ${isDarkMode ? 'bg-yellow-600' : 'bg-yellow-500'} text-white rounded-full flex items-center justify-center`}
                         >
-                        Edit 
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487l3.65 3.65m-.53 1.943l-7.82 7.82-4.285.713.714-4.285 7.82-7.82m2.12-2.121l2.12-2.12m-2.12 2.12l2.121 2.121" />
+                    </svg> 
                         </button>
                         <button
                         onClick={() => deleteItem(groupName, isShelf, locationId)}
@@ -288,12 +290,12 @@ export function Warehouse() {
                     {isModalOpen && (
                             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                             <div className="bg-white rounded-lg shadow-lg p-6 w-80">
-                                <h3 className="text-xl font-semibold mb-4">Enter Dock Name</h3>
+                                <h3 className="text-xl font-semibold mb-4">Edit Dock Name : {docknameIsupdate}</h3>
                                 <input
                                 type="text"
                                 value={dockNameUpdate}
                                 onChange={(e) => setDockNameUpdate(e.target.value)}
-                                placeholder="Dock Name"
+                                placeholder={docknameIsupdate}
                                 className="w-full mb-4 px-3 py-2 border rounded"
                                 />
                                 <div className="flex justify-end">

@@ -13,8 +13,8 @@ const initialOrders: Order[] = [
   { id: 2, company: 'Oishi', warehouse: 'warehouse B', countOdorder: 132, date: '2023-08-20' },
   { id: 3, company: 'Singha', warehouse: 'warehouse C', countOdorder: 11, date: '2023-08-20' },
   { id: 4, company: 'Oishi', warehouse: 'warehouse D', countOdorder: 12, date: '2023-08-20' },
-  { id: 5, company: 'Oishi', warehouse: 'warehouse E', countOdorder: 11, date: '2023-08-20' },
-  { id: 6, company: 'Oishi', warehouse: 'warehouse F', countOdorder: 41, date: '2023-08-20' },
+  { id: 5, company: 'Oishi', warehouse: 'warehouse E', countOdorder: 11, date: '2024-08-20' },
+  { id: 6, company: 'Change', warehouse: 'warehouse F', countOdorder: 41, date: '2023-08-20' },
 ];
 
 export function Orders2() {
