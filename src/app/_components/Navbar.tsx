@@ -59,7 +59,7 @@ export function Navbar() {
         </Link>
       </div>
       <div className="ml-2">
-        <Link href="/pages/Order">
+        <Link href="/pages/Orderlist">
           <button className="bg-black p-1 text-white px-2 rounded-lg">
             Order
           </button>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { PlusCircleIcon, PlusIcon, ArrowLeftIcon, MinusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import axios from 'axios'; // Ensure axios is installed
+import { group } from 'console';
 
 export function Warehouse() {
 
@@ -209,13 +210,53 @@ export function Warehouse() {
     };
 
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [dockNameUpdate, setDockNameUpdate] = useState("");
+    const [docknameIsupdate, setdocknameIsupdate] = useState("");
+
+    const handleSaveUpdate = (groupName: string) => {
+        
+        const dockNewName = dockNameUpdate; // ชื่อใหม่ที่ต้องการแก้ไข
+        const dockId = docknameIsupdate.split('-')[0]!; // ดึง dockId จากชื่อเก่า
+        console.log("ชื่อใหม่ : ", dockNewName, "id เก่า : ", dockId);
+        
+        // ปิด modal
+        setIsModalOpen(false); 
+        if (!dockNewName) return; // ตรวจสอบว่ามีชื่อใหม่ที่จะอัปเดต
+    
+        // อัปเดต state โดยตรงเพื่อแสดงการเปลี่ยนแปลงใน UI ทันที
+        setShelves((prevShelves) => {
+            const newShelves = { ...prevShelves };
+    
+            // หา key (ชื่อเดิมของ dock) ที่ต้องการแก้ไข
+            const oldDockName = Object.keys(newShelves).find(key => key.startsWith(dockId)); 
+            console.log(oldDockName);
+            
+
+            if (oldDockName) {
+                // กำหนดค่าใหม่ให้ dock ที่แก้ไข
+                newShelves[dockNewName] = newShelves[oldDockName] ?? []; 
+                delete newShelves[oldDockName]; // ลบชื่อเดิมออกจาก state
+            }
+    
+            return newShelves; // ส่งคืน state ที่ถูกอัปเดต
+        });
+        setDockNameUpdate('')
+      };
+
+      const openEdit = (groupName: string) => {
+        setdocknameIsupdate(groupName)
+        setIsModalOpen(true);
+      }
+
+
     const renderGroup = (groupName: string, items: ShelfResult[], refMap: React.RefObject<{ [key: string]: HTMLDivElement | null }>, isShelf: boolean, id: number) => {
         const gridConfig = isShelf ? shelfGridConfig : reserveGridConfig;
         const locationId = getLocationId(groupName)
 
         return (
             <div className="flex flex-col mb-8 ml-5 bg-zinc-800 p-4 pb-8" ref={el => (refMap.current[groupName] = el)}>
-                <div className='flex'>
+                <div className='flex items-center'>
                     <div className={`${isDarkMode ? 'text-white' : 'text-black'} mr-1 text-white text-center`}>
                         {groupName}
                     </div>
@@ -225,12 +266,53 @@ export function Warehouse() {
                     >
                         <PlusIcon className="w-5 h-5" />
                     </button>
-                    <button
-                        onClick={() => deleteItem(groupName, isShelf,locationId)}
-                        className={`p-1 ${isDarkMode ? 'bg-red-600' : 'bg-red-500'} text-white rounded-full flex items-center justify-center ml-auto`}
-                    >
-                        <MinusIcon className="w-5 h-5 ml" />
-                    </button>
+
+
+                    <div className="flex ml-auto space-x-2"> 
+                        <button
+                        onClick={() => openEdit(groupName)}
+                        className={`p-1 ${isDarkMode ? 'bg-yellow-600' : 'bg-yellow-500'} text-white rounded-full flex items-center justify-center`}
+                        >
+                        Edit 
+                        </button>
+                        <button
+                        onClick={() => deleteItem(groupName, isShelf, locationId)}
+                        className={`p-1 ${isDarkMode ? 'bg-red-600' : 'bg-red-500'} text-white rounded-full flex items-center justify-center`}
+                        >
+                        <MinusIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+
+
+
+                    {isModalOpen && (
+                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                            <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+                                <h3 className="text-xl font-semibold mb-4">Enter Dock Name</h3>
+                                <input
+                                type="text"
+                                value={dockNameUpdate}
+                                onChange={(e) => setDockNameUpdate(e.target.value)}
+                                placeholder="Dock Name"
+                                className="w-full mb-4 px-3 py-2 border rounded"
+                                />
+                                <div className="flex justify-end">
+                                <button
+                                    onClick={() => handleSaveUpdate(groupName)}
+                                    className="px-4 py-2 bg-green-500 text-white rounded mr-2 hover:bg-green-600"
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                >
+                                    Cancel
+                                </button>
+                                </div>
+                            </div>
+                            </div>
+                        )}
                     
                 </div>
                 { activeGroup === groupName && isShelfActive === isShelf && showLocationNameInput && (
@@ -287,17 +369,6 @@ export function Warehouse() {
         );
     };
 
-    const renderReservesGroup = () => {
-        return (
-            <div className="mt-2 grid ">
-                <div className={`grid grid-cols-1 gap-4`}>
-                    {Object.keys(reserves).map(reserveName =>
-                        renderGroup(reserveName, reserves[reserveName], reserveRefs, false)
-                    )}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen flex`}>
