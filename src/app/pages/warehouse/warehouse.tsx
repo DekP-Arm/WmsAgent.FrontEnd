@@ -175,7 +175,7 @@ export function Warehouse() {
                 return { ...prevShelves, [groupName]: newShelves };
             });
         }
-        setShowDockNameInput(false); 
+        setShowLocationNameInput(false);
         setLocationName(''); 
     };
 
@@ -235,7 +235,7 @@ export function Warehouse() {
                 </div>
                 { activeGroup === groupName && isShelfActive === isShelf && showLocationNameInput && (
                                 <div className=" ml-4">
-                                    <label htmlFor="dockname" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="dockname" className="block text-sm font-medium text-white">
                                         Location Name
                                     </label>
                                     <input
