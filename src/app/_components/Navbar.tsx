@@ -65,8 +65,13 @@ export function Navbar() {
           </button>
         </Link>
       </div>
-
-
+      <div className="ml-2">
+        <Link href="/pages/Checker">
+          <button className="bg-black p-1 text-white px-2 rounded-lg">
+            Checker
+          </button>
+        </Link>
+      </div>
 
     </nav>
   );
