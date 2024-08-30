@@ -24,15 +24,12 @@ export function Inbound() {
 const Board = () => {
   const [cards, setCards] = useState<CardType[]>(DEFAULT_CARDS);
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
-
   const handleCardClick = (card: CardType) => {
     setSelectedCard(card);
   };
-
   const handleCloseModal = () => {
     setSelectedCard(null);
   };
-
   return (
     <div className="flex h-full w-full gap-3 overflow-scroll p-12">
       <Column
@@ -74,7 +71,6 @@ const Board = () => {
     </div>
   );
 };
-
 type ColumnProps = {
   title: string;
   headingColor: string;
