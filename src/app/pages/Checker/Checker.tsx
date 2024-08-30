@@ -23,7 +23,7 @@ interface Checker{
     date_exp:string;
     column: ColumnType;
 }
-type ColumnType = "UnCheck" | "Checked";
+type ColumnType = "UnCheck" | "Checked" | "Reject";
 
 const DEFAULT_CHECKS: Checker[] = [
     {
@@ -41,6 +41,14 @@ const DEFAULT_CHECKS: Checker[] = [
     {
         check_id:"5",unite_id:5,order_id:5,item_id:5,item_qty:18,reason:"Uncomment",date_check:"10-10-2022" , date_exp:"12-10-2024", column:"UnCheck"
     }
+    ,
+    {
+        check_id:"6",unite_id:6,order_id:6,item_id:6,item_qty:16,reason:"Uncomment",date_check:"10-10-2022" , date_exp:"12-10-2024", column:"UnCheck"
+    }
+    ,
+    {
+        check_id:"7",unite_id:7,order_id:7,item_id:7,item_qty:17,reason:"Uncomment",date_check:"10-10-2022" , date_exp:"12-10-2024", column:"UnCheck"
+    }
 ]
 
 // check_id   , order_id , unit_id  ,  item_id  , qty  , rs  ,  date_c ,  date_exp
@@ -52,18 +60,17 @@ export default function Checker(){
         <div className={`${isDarkMode ? ' bg-gray-900' :
             ' bg-neutral-300'} grid w-full `}>
             <div className="grid place-items-center mt-6 mb-52">
-                <div className={`${isDarkMode ? 'bg-gray-700': 'bg-white'} w-2/5  rounded-lg pb-5 `}>
+                <div className={`${isDarkMode ? 'bg-gray-700': 'bg-white'} w-4/5  rounded-lg pb-5 `}>
                     <h1 className="shadow-md shadow-slate-700 rounded-xl flex mt-5 text-center text-2xl pt-3 pb-3 pr-14 pl-14 bg-gray-800 text-white mx-10 ">
                     Checker Board 
                     </h1>
                     <Board/>
                     <div className="w-full grid place-items-center py-5">
-                        <button className="px-5 py-3 text-2xl rounded-md text-white  bg-green-600 hover:bg-green-400" onClick={()=>{router.push("/pages/Order")}}>
+                        <button className="px-5 py-3 text-2xl rounded-md text-white  bg-green-600 hover:bg-green-400" onClick={()=>{alert("Succees!!")}}>
                             Verify Check
                         </button>
                     </div>
                 </div>
-                
             </div>
         </div>
     )
@@ -81,12 +88,12 @@ const Board = ()=> {
         setSelectCheck(null);
     }
     return(
-        <div className="grid grid-cols-2 pl-10 pr-8  py-10 gap-3 ">
+        <div className="grid grid-cols-3 pl-10 pr-8  py-10 gap-3 ">
                <Column
                 title="UnCheck"
                 column="UnCheck"
                 headingColor="text-white-500"
-                background= "bg-red-400"
+                background= "bg-gray-400"
                 checkers={checkers}
                 setChecker={setChecker}
                 onCheckerClick={handleCheckClick}>
@@ -96,6 +103,15 @@ const Board = ()=> {
                 column="Checked"
                 headingColor="text-white-500"
                 background= "bg-green-400"
+                checkers={checkers}
+                setChecker={setChecker}
+                onCheckerClick={handleCheckClick}>
+                </Column>
+                <Column
+                title="Reject"
+                column="Reject"
+                headingColor="text-white-500"
+                background= "bg-red-400"
                 checkers={checkers}
                 setChecker={setChecker}
                 onCheckerClick={handleCheckClick}>
@@ -230,7 +246,7 @@ const Column = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`h-full w-full transition-colors ${
-            active ? "bg-neutral-800/50" : "bg-neutral-800/0"
+            active ? "bg-neutral-800/10" : "bg-neutral-500/0"
         }`}
         >
         {filteredChecker.map((c) => (
@@ -288,11 +304,10 @@ const Check = ({
                 date_check,
                 date_exp
             })}
-            className="cursor-grab shadow-lg shadow-slate-900 rounded border-dashed border-white border-2 bg-neutral-800 hover:bg-gray-500 p-3 active:cursor-grabbing"
+            className="cursor-grab shadow-lg shadow-slate-900 rounded border-dashed border-white border-2 bg-neutral-800 hover:bg-gray-700 p-3 active:cursor-grabbing"
         >
             <p className="text-sm  text-neutral-100"> Item ID: {check_id} | Status: {column}</p>
         </motion.div>
-
         </>
     )
 }
@@ -341,7 +356,7 @@ const BurnBarrel = ({
             className={`mt-10 grid h-56 w-56 shrink-0 place-content-center rounded border text-3xl ${
             active
             ? "border-red-800 bg-red-800/20 text-red-500"
-            : "border-neutral-500 bg-neutral-500/20 text-neutral-500"
+            : "border-neutral-500 bg-neutral-500/20 text-neutral-700"
         }`}
         >
       {active ? <FaFire className="animate-bounce" /> : <FiTrash />}
