@@ -60,7 +60,7 @@ export default function Checker(){
         <div className={`${isDarkMode ? ' bg-gray-900' :
             ' bg-neutral-300'} grid w-full `}>
             <div className="grid place-items-center mt-6 mb-52">
-                <div className={`${isDarkMode ? 'bg-gray-700': 'bg-white'} w-4/5  rounded-lg pb-5 `}>
+                <div className={`${isDarkMode ? 'bg-gray-700': 'bg-white'} w-3/5  rounded-lg pb-5 `}>
                     <h1 className="shadow-md shadow-slate-700 rounded-xl flex mt-5 text-center text-2xl pt-3 pb-3 pr-14 pl-14 bg-gray-800 text-white mx-10 ">
                     Checker Board 
                     </h1>
@@ -93,7 +93,8 @@ const Board = ()=> {
                 title="UnCheck"
                 column="UnCheck"
                 headingColor="text-white-500"
-                background= "bg-gray-400"
+                background= "bg-gray-300"
+                bg_lenght="bg-gray-400"
                 checkers={checkers}
                 setChecker={setChecker}
                 onCheckerClick={handleCheckClick}>
@@ -102,7 +103,8 @@ const Board = ()=> {
                 title="Checked"
                 column="Checked"
                 headingColor="text-white-500"
-                background= "bg-green-400"
+                bg_lenght="bg-green-400"
+                background= "bg-green-300"
                 checkers={checkers}
                 setChecker={setChecker}
                 onCheckerClick={handleCheckClick}>
@@ -111,7 +113,8 @@ const Board = ()=> {
                 title="Reject"
                 column="Reject"
                 headingColor="text-white-500"
-                background= "bg-red-400"
+                background= "bg-red-300"
+                bg_lenght="bg-red-400"
                 checkers={checkers}
                 setChecker={setChecker}
                 onCheckerClick={handleCheckClick}>
@@ -127,20 +130,13 @@ type ColumnProps = {
     title: string;
     headingColor: string;
     background:string;
+    bg_lenght : string;
     checkers: Checker[];
     column: ColumnType;
     setChecker: Dispatch<SetStateAction<Checker[]>>;
     onCheckerClick: (checker: Checker) => void;
   };
-const Column = ({
-        title,
-        background,
-        headingColor,
-        checkers,
-        column,
-        setChecker,
-        onCheckerClick,
-      }: ColumnProps) => {
+const Column = ({title,background,bg_lenght,headingColor,checkers,column,setChecker,onCheckerClick,}: ColumnProps) => {
         const [active, setActive] = useState(false);
         const handleDragStart = (e: DragEvent, checker: Checker) => {
             e.dataTransfer.setData("checkerId", checker.check_id);
@@ -161,15 +157,12 @@ const Column = ({
         if (!checkerToTransfer) return;
         checkerToTransfer = { ...checkerToTransfer, column };
         copy = copy.filter((c) => c.check_id !== checkerId);
-
         const moveToBack = before === "-1";
-
         if (moveToBack) {
             copy.push(checkerToTransfer);
         } else {
             const insertAtIndex = copy.findIndex((el) => el.check_id === before);
             if (insertAtIndex === undefined) return;
-
             copy.splice(insertAtIndex, 0, checkerToTransfer);
         }
         setChecker(copy);
@@ -180,44 +173,40 @@ const Column = ({
         highlightIndicator(e);
         setActive(true);
     };
+
     const clearHighlights = (els?: HTMLElement[]) => {
         const indicators = els || getIndicators();
-    
         indicators.forEach((i) => {
           i.style.opacity = "0";
         });
     };
     const highlightIndicator = (e: DragEvent) => {
         const indicators = getIndicators();
-    
         clearHighlights(indicators);
-    
         const el = getNearestIndicator(e, indicators);
-    
         el.element.style.opacity = "1";
     };
 
+    
+
     const getNearestIndicator = (e: DragEvent, indicators: HTMLElement[]) => {
-    const DISTANCE_OFFSET = 50;
-    
-    const el = indicators.reduce(
-        (closest, child) => {
-        const box = child.getBoundingClientRect();
+        const DISTANCE_OFFSET = 50;
+        const el = indicators.reduce(
+            (closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = e.clientY - (box.top + DISTANCE_OFFSET);
 
-        const offset = e.clientY - (box.top + DISTANCE_OFFSET);
-
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-        },
-          {
-            offset: Number.NEGATIVE_INFINITY,
-            element: indicators[indicators.length - 1],
-          }
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+            },
+            {
+                offset: Number.NEGATIVE_INFINITY,
+                element: indicators[indicators.length - 1],
+            }
         );
-    
         return el;
     };
     const getIndicators = () => {
@@ -233,10 +222,10 @@ const Column = ({
     };
     const filteredChecker = checkers.filter((c) => c.column === column);
     return (
-    <div className={`w-66 ${background} pb-20 px-5 rounded-2xl`}>
+    <div className={`w-66 ${background} pb-20 px-5 rounded-xl`}>
         <div className="mb-3 flex items-center justify-between">
-        <h3 className={`mt-5 text-2xl font-bold text-center border-2 border-black bg-white rounded-xl px-5 py-2 ${headingColor}`}>{title}</h3>
-        <span className="mt-5 rounded text-2xl font-bold  text-gray-900">
+        <h3 className={`mt-5 text-2xl text-white font-bold text-center shadow-sm shadow-slate-700 bg-gray-800 rounded px-5 py-2 ${headingColor}`}>{title}</h3>
+        <span className={`mt-5 rounded text-2xl font-bold ${bg_lenght} px-5 py-2 text-center shadow-inner shadow-slate-700  text-white`}>
             {filteredChecker.length}
         </span>
         <div className="h-10"></div>
@@ -246,7 +235,7 @@ const Column = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`h-full w-full transition-colors ${
-            active ? "bg-neutral-800/10" : "bg-neutral-500/0"
+            active ? "bg-neutral-800/0" : "bg-neutral-500/0"
         }`}
         >
         {filteredChecker.map((c) => (
@@ -306,7 +295,7 @@ const Check = ({
             })}
             className="cursor-grab shadow-lg shadow-slate-900 rounded border-dashed border-white border-2 bg-neutral-800 hover:bg-gray-700 p-3 active:cursor-grabbing"
         >
-            <p className="text-sm  text-neutral-100"> Item ID: {check_id} | Status: {column}</p>
+            <span className="text-sm  text-neutral-100"> Item ID: {check_id} | Status:</span><span className={`${column == 'Reject'? 'text-red-600':column == "Checked"? 'text-green-600':'text-gray-500'} ml-3 text-lg text-bold  `}>{column}</span>
         </motion.div>
         </>
     )
@@ -368,7 +357,21 @@ type ModalProps = {
     check: Checker;
     onClose: () => void;
 };
+
+
 const Modal = ({ check, onClose }: ModalProps) => {
+    const [reason, setReason] = useState(check.reason);
+
+    const handleReasonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setReason(e.target.value);
+    };
+
+    const handleSave = (id: number) => { 
+        console.log('id ',id,' reason ',reason);
+           
+        check.reason = reason; 
+        onClose();
+    };
     return (
         <div
         className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75"
@@ -384,9 +387,11 @@ const Modal = ({ check, onClose }: ModalProps) => {
             <p className="text-neutral-300 my-2">Quantity: {check.item_qty} unit</p>
             <p className="text-neutral-300 my-2">Date Check: {check.date_check}</p>
             <p className="text-neutral-300 my-2">Data Expire {check.date_exp}</p>
-            <p className="text-neutral-300 my-2">Reason: {check.reason}</p>
-            <button className="mt-4  rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-neutral-50">
-                Edite
+            <p className="text-neutral-300 my-2">Reason: 
+                <input type="text" className=" text-black text-md  ml-3 pl-2 py-2 shadow-inner shadow-slate-600" value={reason} onChange={handleReasonChange}/>
+            </p>
+            <button className="mt-4  rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-neutral-50" onClick={() => handleSave(check.item_id)}>
+                Save
             </button>
             <button
             onClick={onClose}
