@@ -21,7 +21,7 @@ type Cell = {
 
 export default function ShelfList() {
   const searchParams = useSearchParams();
-  const groupId = searchParams.get('groupId');
+  const shelfTypeId = searchParams.get('shelfTypeId');
   const shelfId = searchParams.get('shelfId');
 
   const [cells, setCells] = useState<Cell[]>([
@@ -118,7 +118,7 @@ export default function ShelfList() {
           <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(1, 100px)` }}>
             <div className="mt-8 flex justify-between itms-center w-full">
               <div className='flex'>
-                <div className='flex w-16 text-bold'>Group {groupId}</div>
+                <div className='flex w-16 text-bold'>Group {shelfTypeId}</div>
                 <div className='flex w-16 text-md'>Shelf {shelfId}</div>
               </div>
               <div className='flex'>
