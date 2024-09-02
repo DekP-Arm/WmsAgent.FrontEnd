@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import Shelflist from './shelflist';
 
 type Cell = {
   id: number;
@@ -13,118 +14,37 @@ type Cell = {
   width: number;
   height: number;
   volume: number;
-};
-
-const ItemTypes = {
-  CELL: 'cell',
-};
-
-const DraggableCell = ({
-  cell,
-  index,
-  moveCell,
-  onSelectCell,
-  isSelected,
-  barData
-}: {
-  cell: Cell;
-  index: number;
-  moveCell: (dragIndex: number, hoverIndex: number) => void;
-  onSelectCell: (cellId: number) => void;
-  isSelected: boolean;
-  barData: { label: string; weight: number; percentage: number; color: string }[];
-}) => {
-  const [, ref] = useDrag({
-    type: ItemTypes.CELL,
-    item: { index },
-  });
-
-  const [, drop] = useDrop({
-    accept: ItemTypes.CELL,
-    hover(item: { index: number }) {
-      if (item.index !== index) {
-        moveCell(item.index, index);
-        item.index = index;
-      }
-    },
-  });
-
-  const totalPercentage = barData.reduce((sum, bar) => sum + bar.percentage, 0);
-
-  return (
-    <div
-      ref={(node) => ref(drop(node))}
-      className={`border border-gray-400 cursor-move ${isSelected ? 'bg-blue-200' : ''}`}
-      onClick={() => onSelectCell(cell.id)}
-      style={{
-        width: `${cell.width}px`,
-        height: `100px`,
-      }}
-    >
-      <div className='px-2 pt-1 flex flex-col'>
-        <div className="flex justify-between">
-          <span>Shelf list {cell.id + 1}</span>
-          <div className="text-xs text-gray-400 flex">
-            Space
-            {100 - totalPercentage}%
-          </div>
-        </div>
-        <div className="text-xs text-gray-400 flex">
-          Volume: {cell.volume} cm³
-        </div>
-      </div>
-      <div className='w-full h-2/3 mb-0 flex border border-zinc-600'>
-        {barData.map((bar, barIndex) => (
-          <div
-            key={barIndex}
-            className={`h-full border border-zinc-600 ${bar.color} flex items-center justify-center`}
-            style={{ width: `${bar.percentage}%` }}
-          >
-            {bar.percentage > 0 && (
-              <div className="flex flex-col items-center justify-center text-xs text-white">
-                <span>{bar.label}</span>
-                <span>{bar.percentage}%</span>
-                <span>{bar.weight}kg</span>
-              </div>
-            )}
-          </div>
-        ))}
-        {100 - totalPercentage > 0 && (
-          <div
-            className='h-full border border-zinc-600 flex items-center justify-center bg-gray-100 text-zinc-500 text-xs'
-            style={{ width: `${100 - totalPercentage}%` }}
-          >
-            {100 - totalPercentage}%
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  type: 'Palette' | 'Pack';
+  gridColumns?: number;
+  addedPaletteCount?: number;  // Add the new property to track the number of added palettes
 };
 
 export default function ShelfList() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const shelfTypeId = searchParams.get('shelfTypeId');
+  const shelfId = searchParams.get('shelfId');
 
   const [cells, setCells] = useState<Cell[]>([
-    { id: 0, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
-    { id: 1, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
-    { id: 2, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 },
-    { id: 3, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000 }
+    { id: 0, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000, type: 'Pack' },
+    { id: 1, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000, type: 'Palette', gridColumns: 4, addedPaletteCount: 0 },
+    { id: 2, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000, type: 'Pack' },
+    { id: 3, merged: false, colspan: 1, rowspan: 1, width: 700, height: 100, volume: 1000, type: 'Palette', gridColumns: 3, addedPaletteCount: 0 }
   ]);
 
-  const [dimensionX, setDimensionX] = useState<number | string>('');  // Height
-  const [dimensionY, setDimensionY] = useState<number | string>('');  // Width
-  const [dimensionZ, setDimensionZ] = useState<number | string>('');  // Depth
+  const [dimensionX, setDimensionX] = useState<number | string>('');
+  const [dimensionY, setDimensionY] = useState<number | string>('');
+  const [dimensionZ, setDimensionZ] = useState<number | string>('');
   const [selectedCellId, setSelectedCellId] = useState<number | null>(null);
   const [isSorted, setIsSorted] = useState(false);
   const [templates, setTemplates] = useState<{ id: number; cells: Cell[] }[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [newGridColumns, setNewGridColumns] = useState<number>(1);
 
   const handleInputChange = (setDimension: React.Dispatch<React.SetStateAction<number | string>>) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = event.target.value.replace(/^0+/, ''); // Remove leading zeroes
-    setDimension(value === '' ? '' : Number(value)); // Convert to number if not empty
+    const value = event.target.value.replace(/^0+/, '');
+    setDimension(value === '' ? '' : Number(value));
   };
 
   const addNewShelfList = () => {
@@ -138,7 +58,8 @@ export default function ShelfList() {
       rowspan: 1,
       width: 700,
       height: 100,
-      volume: volume
+      volume: volume,
+      type: 'Pack'
     };
 
     setCells([...cells, newCell]);
@@ -158,40 +79,18 @@ export default function ShelfList() {
     setSelectedCellId(cellId);
   };
 
-  const selectedCellDetail = cells.find(cell => cell.id === selectedCellId);
+  const handleTypeChange = (cellId: number, newType: 'Palette' | 'Pack') => {
+    setCells(cells.map(cell => cell.id === cellId ? { ...cell, type: newType } : cell));
+  };
 
-  const barDataList = [
-    [
-      { label: 'Oishi', weight: 10, percentage: 10, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
-      { label: 'Singha', weight: 10, percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
-      { label: 'Leo', weight: 10, percentage: 50, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
-      { label: 'Blend', weight: 10, percentage: 20, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
-    ],
-    [
-      { label: 'Oishi', percentage: 30, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
-      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
-      { label: 'Leo', percentage: 10, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
-      { label: 'Blend', percentage: 40, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
-    ],
-    [
-      { label: 'Oishi', percentage: 10, color: 'bg-gradient-to-r from-emerald-900 via-emerald-600 to-emerald-300 background-animate' },
-      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' }
-    ],
-    [
-      { label: 'Singha', percentage: 20, color: 'bg-gradient-to-r from-blue-900 via-blue-600 to-blue-300 background-animate' },
-      { label: 'Leo', percentage: 50, color: 'bg-gradient-to-r from-red-900 via-red-600 to-red-300 background-animate' },
-      { label: 'Blend', percentage: 20, color: 'bg-gradient-to-r from-purple-900 via-purple-600 to-purple-300 background-animate' }
-    ]
-  ];
-
-  const confirmSorting = () => {
-    const sortedCells = [...cells].sort((a, b) => a.id - b.id);
-    const renamedCells = sortedCells.map((cell, index) => ({
-      ...cell,
-      id: index
-    }));
-    setCells(renamedCells);
-    setIsSorted(true);
+  const handleAddPalette = (cellId: number) => {
+    setCells(prevCells =>
+      prevCells.map(cell =>
+        cell.id === cellId
+          ? { ...cell, addedPaletteCount: (cell.addedPaletteCount || 0) + 1 }
+          : cell
+      )
+    );
   };
 
   const saveTemplate = () => {
@@ -210,51 +109,81 @@ export default function ShelfList() {
     }
   };
 
+  const selectedCellDetail = cells.find(cell => cell.id === selectedCellId);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex">
         <div className="overflow-x-auto flex-1 p-4 relative">
           <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(1, 100px)` }}>
-            {cells.map((cell, index) =>
-              <DraggableCell
-                key={cell.id}
-                cell={cell}
-                index={index}
-                moveCell={moveCell}
-                onSelectCell={handleCellSelect}
-                isSelected={cell.id === selectedCellId}
-                barData={barDataList[index % barDataList.length]}
-              />
-            )}
-          </div>
-          <div className='flex mt-10'>
-            <button
-              onClick={confirmSorting}
-              className="bg-green-500 text-white p-2 rounded mr-2"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={saveTemplate}
-              className="bg-blue-500 text-white p-2 rounded"
-            >
-              Save Template
-            </button>
+            <div className="mt-8 flex justify-between itms-center w-full">
+              <div className='flex'>
+                <div className='flex w-16 text-bold'>Group {shelfTypeId}</div>
+                <div className='flex w-16 text-md'>Shelf {shelfId}</div>
+              </div>
+              <div className='flex'>
+                <input
+                  type="text"
+                  placeholder='Template name'
+                  className="border border-gray-300 w-20 mx-1"
+                />
+                <button
+                  onClick={saveTemplate}
+                  className="bg-blue-500 text-white px-2 rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+            {cells.map((cell, index) => (
+              <div key={cell.id} className="mb-4">
+                <Shelflist
+                  cell={cell}
+                  index={index}
+                  moveCell={moveCell}
+                  onSelectCell={handleCellSelect}
+                  isSelected={cell.id === selectedCellId}
+                  barData={[]}
+                  handleAddPalette={() => handleAddPalette(cell.id)}
+                  handleTypeChange={handleTypeChange}
+                />
+              </div>
+            ))}
           </div>
         </div>
-        <div className="w-1/5 p-4 border-l border-gray-300 flex flex-col">
+        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col">
           {selectedCellDetail && (
             <div>
               <p className="text-md text-gray-800 font-bold mt-4">Shelf list {selectedCellDetail.id + 1}</p>
               <p className="mt-2 ml-4">Volume: {selectedCellDetail.volume} cm³</p>
-              <p className="text-md text-gray-800 font-bold mt-4">Item:</p>
+              <p className="mt-2 ml-4">Type: {selectedCellDetail.type}</p>
+              {selectedCellDetail.type === 'Palette' && (
+                <div>
+                  <div className='text-md text-gray-800 font-bold mt-4 mb-2'>
+                    Palette List
+                  </div>
+                  <div className='ml-4'>
+                    {selectedCellDetail.addedPaletteCount && selectedCellDetail.addedPaletteCount > 0 ? (
+                      Array.from({ length: selectedCellDetail.addedPaletteCount }).map((_, index) => (
+                        <div key={index} className="p-2">
+                          Added Palette {index + 1}
+                        </div>
+                      ))
+                    ) : (
+                      <div>No Palettes Added</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-        <div className="w-1/5 p-4 border-l border-gray-300 flex flex-col items-center">
+        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col">
+        </div>
+        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col items-center">
           <div className="mt-4">
-            <p className="text-md font-bold">Add New Shelf List</p>
-            <div className="flex flex-col gap-2 mt-2 ml-4">
+            <p className="text-md font-bold mx-4">Add New Shelf List</p>
+            <div className="flex flex-col gap-2 mt-2 mx-4">
               <label>
                 Height
                 <input
@@ -296,13 +225,13 @@ export default function ShelfList() {
           <div className="mt-4">
             <div className='relative mx-auto'>
               <p className="text-lg font-bold">Saved Templates</p>
-              <p className='text-xs text-gray-600'>Use template will be replace shelf</p>
+              <p className='text-xs text-gray-600'>Use template will be replaced shelf</p>
             </div>
             <ul>
               {templates.map(template => (
                 <li key={template.id} className="mt-2">
                   <button
-                    onClick={() => loadTemplate(template.id)}
+                    onClick={() => setSelectedTemplateId(template.id)}
                     className={`p-2 rounded ${selectedTemplateId === template.id ? 'bg-gray-300' : 'bg-gray-100'}`}
                   >
                     Template {template.id}
