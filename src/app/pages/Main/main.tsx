@@ -164,7 +164,7 @@ export default function Main() {
     };
 
     const navigate = (id: number) => {
-        router.push(`/pages/warehouse?id=${id}`);
+        router.push(`/pages/Warehouse?id=${id}`);
     };
 
     useEffect(() => {

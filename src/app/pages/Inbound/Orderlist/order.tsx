@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTheme } from '~/app/_context/Theme'; // Adjust the import path accordingly
 
 interface Order {
   id: number;
@@ -17,7 +18,8 @@ const initialOrders: Order[] = [
   { id: 6, company: 'Change', warehouse: 'warehouse F', countOdorder: 41, date: '2023-08-20' },
 ];
 
-export function Orders2() {
+export default function Orders2() {
+  const { isDarkMode, toggleTheme } = useTheme(); // Use the theme context
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(initialOrders);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -27,29 +29,12 @@ export function Orders2() {
   const [dateFilter, setDateFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-
-  // const fetchOrders = async () => {
-  //   try {
-  //     const response = await fetch('/api/orders'); 
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok');
-  //     }
-  //     const data: Order[] = await response.json();
-  //     setOrders(data);
-  //     setFilteredOrders(data);
-  //   } catch (error) {
-  //     console.error('Error fetching orders:', error);
-  //   }
-  // };
-
-
   const handleEdit = (order: Order) => {
     setCurrentOrder(order);
     setIsModalOpen(true);
   };
 
   const handleSave = () => {
-    console.log(currentOrder);
     if (currentOrder) {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -104,10 +89,8 @@ export function Orders2() {
 
   React.useEffect(() => {
     filterOrders();
-    // fetchOrders();
   }, [companyFilter, warehouseFilter, dateFilter, searchTerm, orders]);
 
-  // Memoized values for filter options
   const uniqueCompanies = useMemo(() => {
     const companies = new Set(orders.map(order => order.company));
     return Array.from(companies);
@@ -119,15 +102,19 @@ export function Orders2() {
   }, [orders]);
 
   return (
-    <div className="flex h-screen w-full bg-neutral-900 text-neutral-50">
+    <div className={`flex h-screen w-full ${isDarkMode ? 'bg-neutral-900 text-neutral-50' : 'bg-white text-black'}`}>
       <div className="w-3/4 p-16 mx-auto flex flex-col">
-        <h1 className="mb-4 text-3xl font-bold text-white">OrderList</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold">Order List</h1>
+        </div>
+
+        {/* Filters */}
         <div className="mb-4">
           <select
             name="companyFilter"
             value={companyFilter}
             onChange={handleChange}
-            className="mr-4 px-3 py-2 border rounded text-black"
+            className={`mr-4 px-3 py-2 border rounded ${isDarkMode ? 'text-black' : 'text-black'}`}
           >
             <option value="">Select Company</option>
             {uniqueCompanies.map(company => (
@@ -138,7 +125,7 @@ export function Orders2() {
             name="warehouseFilter"
             value={warehouseFilter}
             onChange={handleChange}
-            className="mr-4 px-3 py-2 border rounded text-black"
+            className={`mr-4 px-3 py-2 border rounded ${isDarkMode ? 'text-black' : 'text-black'}`}
           >
             <option value="">Select Warehouse</option>
             {uniqueWarehouses.map(warehouse => (
@@ -150,19 +137,21 @@ export function Orders2() {
             name="dateFilter"
             value={dateFilter}
             onChange={handleChange}
-            className="mr-4 px-3 py-2 border rounded text-black"
+            className={`mr-4 px-3 py-2 border rounded ${isDarkMode ? 'text-black' : 'text-black'}`}
           />
-                    <input
+          <input
             type="text"
             name="searchTerm"
             value={searchTerm}
             onChange={handleChange}
             placeholder="Search..."
-            className="mr-4 px-3 py-2 border rounded text-black"
+            className={`mr-4 px-3 py-2 border rounded ${isDarkMode ? 'text-black' : 'text-black'}`}
           />
         </div>
-        <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-800 dark:divide-gray-700">
-          <thead className="bg-gray-900 text-white">
+
+        {/* Orders Table */}
+        <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-lg">
+          <thead className={`${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">order_id</th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">company</th>
@@ -172,9 +161,9 @@ export function Orders2() {
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700 bg-gray-900 text-white">
+          <tbody className={`${isDarkMode ? 'divide-gray-700 bg-gray-900 text-white' : 'divide-gray-300 bg-white text-black'}`}>
             {filteredOrders.map((order) => (
-              <tr key={order.id} className="bg-gray-800 hover:bg-gray-700">
+              <tr key={order.id} className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}>
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">{order.id}</td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm">{order.company}</td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm">{order.warehouse}</td>
@@ -183,11 +172,9 @@ export function Orders2() {
                 <td className="whitespace-nowrap px-6 py-4 text-sm">
                   <button
                     onClick={() => handleEdit(order)}
-                    className="px-4 py-2 bg-white text-black rounded-3xl hover:bg-blue-600"
+                    className={`px-4 py-2 rounded-3xl ${isDarkMode ? 'bg-white text-black' : 'bg-black text-white'} hover:bg-blue-600`}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487l3.65 3.65m-.53 1.943l-7.82 7.82-4.285.713.714-4.285 7.82-7.82m2.12-2.121l2.12-2.12m-2.12 2.12l2.121 2.121" />
-                    </svg>
+                    Edit
                   </button>
                 </td>
               </tr>
@@ -197,51 +184,51 @@ export function Orders2() {
 
         {/* Modal for Editing */}
         {isModalOpen && currentOrder && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-80">
-              <h3 className="text-xl font-semibold mb-4">Edit Order</h3>
+          <div className={`fixed inset-0 z-10 flex items-center justify-center ${isDarkMode ? 'bg-gray-900 bg-opacity-75' : 'bg-gray-200 bg-opacity-75'}`}>
+            <div className={`bg-white rounded-lg p-8 shadow-lg ${isDarkMode ? 'text-black' : ''}`}>
+              <h2 className="text-xl font-bold mb-4">Edit Order</h2>
+              <label className="block mb-2">Company</label>
               <input
                 type="text"
                 name="company"
                 value={currentOrder.company}
                 onChange={handleChange}
-                placeholder="Company"
-                className="w-full mb-2 px-3 py-2 border rounded text-black"
+                className="mb-4 w-full p-2 border rounded"
               />
+              <label className="block mb-2">Warehouse</label>
               <input
                 type="text"
                 name="warehouse"
                 value={currentOrder.warehouse}
                 onChange={handleChange}
-                placeholder="Warehouse"
-                className="w-full mb-2 px-3 py-2 border rounded text-black"
+                className="mb-4 w-full p-2 border rounded"
               />
+              <label className="block mb-2">Count Of Order</label>
               <input
                 type="number"
                 name="countOdorder"
                 value={currentOrder.countOdorder}
                 onChange={handleChange}
-                placeholder="Count of Order"
-                className="w-full mb-2 px-3 py-2 border rounded text-black"
+                className="mb-4 w-full p-2 border rounded"
               />
+              <label className="block mb-2">Date</label>
               <input
                 type="date"
                 name="date"
                 value={currentOrder.date}
                 onChange={handleChange}
-                placeholder="Date"
-                className="w-full mb-4 px-3 py-2 border rounded text-black"
+                className="mb-4 w-full p-2 border rounded"
               />
               <div className="flex justify-end">
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-green-500 text-white rounded mr-2 hover:bg-green-600"
+                  className={`mr-2 px-4 py-2 rounded-3xl ${isDarkMode ? 'bg-blue-400 text-black' : 'bg-blue-600 text-white'}`}
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  className={`px-4 py-2 rounded-3xl ${isDarkMode ? 'bg-red-400 text-black' : 'bg-red-600 text-white'}`}
                 >
                   Cancel
                 </button>
@@ -253,5 +240,3 @@ export function Orders2() {
     </div>
   );
 }
-
-export default Orders2;

@@ -67,6 +67,20 @@ export function Navbar() {
             </button>
           </Link>
         </div>
+        <div className="ml-2">
+          <Link href="/pages/Inbound/Checker">
+            <button className="bg-black p-1 text-white px-2 rounded-lg">
+              Checker
+            </button>
+          </Link>
+        </div>
+        <div className="ml-2">
+          <Link href="/pages/Inbound/Orderlist">
+            <button className="bg-black p-1 text-white px-2 rounded-lg">
+              Orderlist
+            </button>
+          </Link>
+        </div>
       </div>
 
     </nav>

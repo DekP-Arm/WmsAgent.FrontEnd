@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useSearchParams } from 'next/navigation';
+import { useTheme } from '~/app/_context/Theme';
 import Shelflist from './shelflist';
 
 type Cell = {
@@ -20,6 +21,7 @@ type Cell = {
 };
 
 export default function ShelfList() {
+  const { isDarkMode } = useTheme();
   const searchParams = useSearchParams();
   const shelfTypeId = searchParams.get('shelfTypeId');
   const shelfId = searchParams.get('shelfId');
@@ -113,10 +115,10 @@ export default function ShelfList() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="flex">
-        <div className="overflow-x-auto flex-1 p-4 relative">
+      <div className={`${isDarkMode ? 'bg-zinc-900' : 'bg-white'} min-h-screen h-full flex relative`}>
+        <div className={`${isDarkMode ? 'text-white' : 'text-black'} overflow-x-auto flex-1 p-4 relative`}>
           <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(1, 100px)` }}>
-            <div className="mt-8 flex justify-between itms-center w-full">
+            <div className="mt-8 flex justify-between items-center w-full">
               <div className='flex'>
                 <div className='flex w-16 text-bold'>Group {shelfTypeId}</div>
                 <div className='flex w-16 text-md'>Shelf {shelfId}</div>
@@ -151,10 +153,10 @@ export default function ShelfList() {
             ))}
           </div>
         </div>
-        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col">
+        <div className={`${isDarkMode ? 'text-white' : 'text-black'} w-1/6 p-4 border-l border-gray-300 flex flex-col`}>
           {selectedCellDetail && (
             <div>
-              <p className="text-md text-gray-800 font-bold mt-4">Shelf list {selectedCellDetail.id + 1}</p>
+              <p className="text-md  font-bold mt-4">Shelf list {selectedCellDetail.id + 1}</p>
               <p className="mt-2 ml-4">Volume: {selectedCellDetail.volume} cm³</p>
               <p className="mt-2 ml-4">Type: {selectedCellDetail.type}</p>
               {selectedCellDetail.type === 'Palette' && (
@@ -178,12 +180,13 @@ export default function ShelfList() {
             </div>
           )}
         </div>
-        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col">
+        <div className={`${isDarkMode ? 'text-white' : 'text-black'} w-1/6 p-4 border-l border-gray-300 flex flex-col`}>
+          <div className='mx-auto text-lg font-bold mt-3'>Incoming Item</div>
         </div>
-        <div className="w-1/6 p-4 border-l border-gray-300 flex flex-col items-center">
+        <div className={`${isDarkMode ? 'text-white' : 'text-black'} w-1/6 p-4 border-l border-gray-300 flex flex-col`}>
           <div className="mt-4">
-            <p className="text-md font-bold mx-4">Add New Shelf List</p>
-            <div className="flex flex-col gap-2 mt-2 mx-4">
+            <p className="text-md font-bold">Add New Shelf List</p>
+            <div className="flex flex-col gap-2 mt-2">
               <label>
                 Height
                 <input

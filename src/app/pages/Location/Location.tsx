@@ -162,7 +162,7 @@ export function Location() {
     };
 
     return (
-        <div className={`p-4 flex gap-x-4 ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-white text-black'}`}>
+        <div className={`p-4 flex gap-x-4 ${isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black'} min-h-screen h-full`}>
             <div className='w-full'>
                 <div className='flex justify-between mb-4 mt-1'>
                     <div></div>
